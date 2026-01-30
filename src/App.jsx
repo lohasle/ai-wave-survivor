@@ -131,12 +131,19 @@ function App() {
       
       setTimeout(() => {
         if (newEnemyHp <= 0) {
-          setGameState(prev => ({
-            ...prev,
-            phase: GamePhase.RESULT,
-            battleResult: { win: true },
-            attackAnim: null
-          }))
+          // 战斗胜利，跳转到下一个场景
+          const nextSceneId = gameState.currentScene.winNext
+          const nextScene = findScene(nextSceneId)
+          if (nextScene) {
+            setGameState(prev => ({
+              ...prev,
+              phase: GamePhase.STORY,
+              currentScene: nextScene,
+              chapterId: nextSceneId.startsWith('chapter2') ? 'chapter2' : 
+                         nextSceneId.startsWith('chapter3') ? 'chapter3' : prev.chapterId,
+              attackAnim: null
+            }))
+          }
         } else if (newPlayerHp <= 0) {
           setGameState(prev => ({
             ...prev,
