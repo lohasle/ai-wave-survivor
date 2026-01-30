@@ -112,18 +112,18 @@ export const Chapter1Data = {
 你的心跳加速。这是你第一次和AI面试官正面对决。`,
       enemy: {
         name: 'AI面试官',
-        hp: 80,
-        maxHp: 80,
+        hp: 60,
+        maxHp: 60,
         attacks: [
-          { name: '压力面试', damage: 15, description: 'AI抛出一个刁钻问题' },
-          { name: '自动化评测', damage: 20, description: '系统自动给你打分' },
-          { name: '灵魂拷问', damage: 25, description: '"你的核心竞争力是什么？"' }
+          { name: '压力面试', damage: 8, description: 'AI抛出一个刁钻问题' },
+          { name: '自动化评测', damage: 12, description: '系统自动给你打分' },
+          { name: '灵魂拷问', damage: 15, description: '"你的核心竞争力是什么？"' }
         ]
       },
       playerAttacks: [
-        { name: '真诚回答', damage: 10, description: '用真心打动AI' },
-        { name: '展示技能', damage: 15, description: '掏出你的作品集' },
-        { name: '反客为主', damage: 20, description: '问AI：你觉得自己会失业吗？' }
+        { name: '真诚回答', damage: 12, description: '用真心打动AI' },
+        { name: '展示技能', damage: 18, description: '掏出你的作品集' },
+        { name: '反客为主', damage: 25, description: '问AI：你觉得自己会失业吗？' }
       ],
       winNext: '1-3',
       loseNext: 'game-over'
@@ -377,20 +377,20 @@ AI培训官的微笑闪烁了一下，然后说：
 "这次...我们重新来过。"`,
       enemy: {
         name: 'AI面试官（考核模式）',
-        hp: 120,
-        maxHp: 120,
+        hp: 100,
+        maxHp: 100,
         attacks: [
-          { name: '自动化淘汰', damage: 25, description: '系统正在准备裁员名单...' },
-          { name: '效率质疑', damage: 20, description: '你的KPI比AI低了300%' },
-          { name: '灵魂拷问', damage: 30, description: '"你能做什么AI做不到的事？"' },
-          { name: '最终裁决', damage: 40, description: '如果你答不上来，这就是最后一击' }
+          { name: '自动化淘汰', damage: 15, description: '系统正在准备裁员名单...' },
+          { name: '效率质疑', damage: 12, description: '你的KPI比AI低了300%' },
+          { name: '灵魂拷问', damage: 18, description: '"你能做什么AI做不到的事？"' },
+          { name: '最终裁决', damage: 25, description: '如果你答不上来，这就是最后一击' }
         ]
       },
       playerAttacks: [
-        { name: '展示创造力', damage: 15, description: '画一幅没人见过的画' },
-        { name: '讲个笑话', damage: 20, description: '笑话是AI永远学不会的浪漫' },
-        { name: '真诚表达', damage: 25, description: '说出你内心真实的想法' },
-        { name: '使用提示词大师技能', damage: 35, description: '用魔法对抗魔法', requireSkill: 'prompt_master' }
+        { name: '展示创造力', damage: 18, description: '画一幅没人见过的画' },
+        { name: '讲个笑话', damage: 25, description: '笑话是AI永远学不会的浪漫' },
+        { name: '真诚表达', damage: 30, description: '说出你内心真实的想法' },
+        { name: '使用提示词大师技能', damage: 45, description: '用魔法对抗魔法', requireSkill: 'prompt_master' }
       ],
       winNext: 'chapter1-complete',
       loseNext: 'game-over'
@@ -870,20 +870,20 @@ AI会议助手再次停顿：
 比赛开始了。`,
       enemy: {
         name: '效率机器小智',
-        hp: 150,
-        maxHp: 150,
+        hp: 120,
+        maxHp: 120,
         attacks: [
-          { name: '批量处理', damage: 20, description: '同时处理10个任务' },
-          { name: '自动纠错', damage: 15, description: '边做边检查，零返工' },
-          { name: '极速打字', damage: 25, description: '每分钟300字' },
-          { name: '系统加成', damage: 30, description: 'AI效率加成50%' }
+          { name: '批量处理', damage: 12, description: '同时处理10个任务' },
+          { name: '自动纠错', damage: 10, description: '边做边检查，零返工' },
+          { name: '极速打字', damage: 18, description: '每分钟300字' },
+          { name: '系统加成', damage: 22, description: 'AI效率加成50%' }
         ]
       },
       playerAttacks: [
-        { name: '专注单点突破', damage: 20, description: '质量优先，做一个是一个' },
-        { name: '使用提示词', damage: 30, description: '让AI帮你干活', requireSkill: 'prompt_master' },
-        { name: '摸鱼战术', damage: 25, description: '反正也比不过，不如休息' },
-        { name: '向主管举报', damage: 40, description: '指出AI违规操作', requireSkill: 'evidence_keeper' }
+        { name: '专注单点突破', damage: 25, description: '质量优先，做一个是一个' },
+        { name: '使用提示词', damage: 35, description: '让AI帮你干活', requireSkill: 'prompt_master' },
+        { name: '摸鱼战术', damage: 20, description: '反正也比不过，不如休息' },
+        { name: '向主管举报', damage: 45, description: '指出AI违规操作', requireSkill: 'evidence_keeper' }
       ],
       winNext: 'chapter2-complete',
       loseNext: 'game-over'
