@@ -340,3 +340,193 @@ class SoundManager {
 
 // 导出单例
 export const soundManager = new SoundManager()
+
+/**
+ * 成就系统
+ */
+class AchievementSystem {
+  constructor() {
+    this.ACHIEVEMENTS = {
+      FIRST_GAME: {
+        id: 'first_game',
+        name: '初入职场',
+        description: '完成第一次游戏',
+        icon: '🎮',
+        condition: (stats) => stats.gamesPlayed >= 1
+      },
+      FIRST_VICTORY: {
+        id: 'first_victory',
+        name: '首战告捷',
+        description: '赢得第一场战斗',
+        icon: '⚔️',
+        condition: (stats) => stats.battlesWon >= 1
+      },
+      BATTLE_MASTER: {
+        id: 'battle_master',
+        name: '战斗大师',
+        description: '赢得10场战斗',
+        icon: '🏆',
+        condition: (stats) => stats.battlesWon >= 10
+      },
+      SKILL_COLLECTOR: {
+        id: 'skill_collector',
+        name: '技能收藏家',
+        description: '解锁全部技能',
+        icon: '🧠',
+        condition: (stats) => stats.skillsUnlocked >= 6
+      },
+      STRESS_SURVIVOR: {
+        id: 'stress_survivor',
+        name: '压力幸存者',
+        description: '在压力值80以上存活',
+        icon: '😰',
+        condition: (stats) => stats.highestStress >= 80
+      },
+      ENDINGS: {
+        id: 'endings',
+        name: '多结局探索者',
+        description: '发现3个不同结局',
+        icon: '🔀',
+        condition: (stats) => stats.uniqueEndings >= 3
+      },
+      SPEEDRUNNER: {
+        id: 'speedrunner',
+        name: '速通达人',
+        description: '30分钟内完成一章',
+        icon: '⏱️',
+        condition: (stats) => stats.fastestChapterTime <= 1800
+      }
+    }
+    this.storageKey = 'ai-wave-survivor-achievements'
+  }
+
+  /**
+   * 获取已解锁成就
+   */
+  getUnlocked() {
+    try {
+      const saved = localStorage.getItem(this.storageKey)
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  }
+
+  /**
+   * 解锁成就
+   */
+  unlock(achievementId) {
+    const unlocked = this.getUnlocked()
+    if (unlocked.includes(achievementId)) return false
+
+    const achievement = this.ACHIEVEMENTS[achievementId.toUpperCase()]
+    if (!achievement) return false
+
+    unlocked.push(achievementId)
+    localStorage.setItem(this.storageKey, JSON.stringify(unlocked))
+    console.log(`[Achievement] Unlocked: ${achievement.name}`)
+    return true
+  }
+
+  /**
+   * 检查成就状态
+   */
+  checkAchievements(stats) {
+    const unlocked = this.getUnlocked()
+    const available = []
+    const earned = []
+
+    for (const [key, ach] of Object.entries(this.ACHIEVEMENTS)) {
+      if (unlocked.includes(ach.id)) {
+        earned.push(ach)
+      } else if (ach.condition(stats)) {
+        this.unlock(ach.id)
+        earned.push(ach)
+      } else {
+        available.push(ach)
+      }
+    }
+
+    return { available, earned }
+  }
+
+  /**
+   * 获取进度
+   */
+  getProgress() {
+    const unlocked = this.getUnlocked()
+    const total = Object.keys(this.ACHIEVEMENTS).length
+    return {
+      unlocked: unlocked.length,
+      total,
+      percentage: Math.round((unlocked.length / total) * 100)
+    }
+  }
+
+  /**
+   * 重置成就
+   */
+  reset() {
+    localStorage.removeItem(this.storageKey)
+    console.log('[Achievement] All achievements reset')
+  }
+}
+
+export const achievementSystem = new AchievementSystem()
+
+/**
+ * 游戏统计
+ */
+export function createGameStats() {
+  return {
+    gamesPlayed: 0,
+    battlesWon: 0,
+    battlesLost: 0,
+    skillsUnlocked: 0,
+    highestStress: 0,
+    uniqueEndings: [],
+    fastestChapterTime: Infinity,
+    totalPlayTime: 0,
+    choicesMade: 0
+  }
+}
+
+/**
+ * 更新统计
+ */
+export function updateStats(stats, event) {
+  const newStats = { ...stats }
+
+  switch (event.type) {
+    case 'game_start':
+      newStats.gamesPlayed++
+      break
+    case 'battle_win':
+      newStats.battlesWon++
+      break
+    case 'battle_lose':
+      newStats.battlesLost++
+      break
+    case 'skill_unlock':
+      newStats.skillsUnlocked++
+      break
+    case 'stress_update':
+      newStats.highestStress = Math.max(newStats.highestStress, event.stress)
+      break
+    case 'ending':
+      if (!newStats.uniqueEndings.includes(event.ending)) {
+        newStats.uniqueEndings.push(event.ending)
+      }
+      break
+    case 'chapter_complete':
+      if (event.time < newStats.fastestChapterTime) {
+        newStats.fastestChapterTime = event.time
+      }
+      break
+    case 'choice':
+      newStats.choicesMade++
+      break
+  }
+
+  return newStats
+}
