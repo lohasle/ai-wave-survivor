@@ -459,6 +459,86 @@
   animation: fadeIn 0.5s ease;
 }
 
+/* 选择高亮 */
+.choice-selected {
+  background: var(--accent) !important;
+  transform: translateX(8px) scale(1.02);
+  box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
+}
+
+.choice-hotkey {
+  margin-left: auto;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* 行动高亮 */
+.action-selected {
+  transform: scale(1.03);
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.6);
+  border-color: var(--accent) !important;
+}
+
+.action-hotkey {
+  margin-left: auto;
+  font-size: 12px;
+  opacity: 0.6;
+  background: rgba(255,255,255,0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.action-hints {
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* 伤害数字动画 */
+.damage-number {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  font-size: 32px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1000;
+  animation: damageFloat 1s ease-out forwards;
+}
+
+.player-damage {
+  color: var(--success);
+  text-shadow: 0 0 10px rgba(78, 204, 163, 0.8);
+}
+
+.enemy-damage {
+  color: var(--danger);
+  text-shadow: 0 0 10px rgba(233, 69, 96, 0.8);
+}
+
+@keyframes damageFloat {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(-50%, -60%) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -100%) scale(1);
+    opacity: 0;
+  }
+}
+
+/* 快捷键提示 */
+.shortcuts-hint {
+  padding: 12px;
+  background: rgba(78, 204, 163, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(78, 204, 163, 0.2);
+}
+
 /* 动画 */
 @keyframes fadeIn {
   from { opacity: 0; }

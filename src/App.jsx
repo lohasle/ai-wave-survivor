@@ -12,6 +12,25 @@ function App() {
     battleResult: null
   }))
 
+  // 全局快捷键处理
+  useEffect(() => {
+    const handleGlobalKeydown = (e) => {
+      // 在开始界面按 N 新游戏
+      if (gameState.phase === GamePhase.START) {
+        if (e.key.toLowerCase() === 'n') {
+          // 模拟点击新游戏按钮
+          document.querySelector('.btn-primary.btn-large')?.click()
+        } else if (e.key.toLowerCase() === 'c') {
+          // 模拟点击继续按钮
+          document.querySelector('.btn-secondary')?.click()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalKeydown)
+    return () => window.removeEventListener('keydown', handleGlobalKeydown)
+  }, [gameState.phase])
+
   // 查找场景
   const findScene = useCallback((sceneId, chapterId = gameState.chapterId) => {
     if (sceneId === 'back-to-menu') {
@@ -210,16 +229,26 @@ function App() {
   )
 }
 
-// 开始界面
+// 开始界面 - 增强版
 function StartScreen({ onNewGame, onContinue }) {
+  const [isHovering, setIsHovering] = useState(null)
+
+  const handleNewGameHover = (e) => {
+    setIsHovering(e.type === 'mouseenter' ? 'newGame' : null)
+  }
+
+  const handleContinueHover = (e) => {
+    setIsHovering(e.type === 'mouseenter' ? 'continue' : null)
+  }
+
   return (
     <div className="start-screen flex-col flex-center gap-3">
       <div className="game-logo">🤖</div>
       <h1 className="game-title">AI浪潮生存者</h1>
       <p className="game-subtitle">在AI横行的世界里，找到你不可替代的价值</p>
-      
+
       <div className="version-badge">v0.2.0 - 第二章开放</div>
-      
+
       <div className="card text-center">
         <h3 className="text-accent">游戏特色</h3>
         <ul className="feature-list mt-2">
@@ -230,35 +259,53 @@ function StartScreen({ onNewGame, onContinue }) {
           <li>😂 黑色幽默与职场梗</li>
         </ul>
       </div>
-      
-      <button className="btn btn-primary btn-large" onClick={onNewGame}>
-        🆕 开始游戏
+
+      <button
+        className="btn btn-primary btn-large"
+        onClick={onNewGame}
+        onMouseEnter={handleNewGameHover}
+        onMouseLeave={handleNewGameHover}
+      >
+        {isHovering === 'newGame' ? '🚀' : '🆕'} 开始游戏
       </button>
-      <button className="btn btn-secondary" onClick={onContinue}>
-        📂 继续游戏
+      <button
+        className="btn btn-secondary"
+        onClick={onContinue}
+        onMouseEnter={handleContinueHover}
+        onMouseLeave={handleContinueHover}
+      >
+        {isHovering === 'continue' ? '📂' : '📂'} 继续游戏
       </button>
-      
+
       <div className="stats-preview">
-        <small className="text-secondary">已有 2 个章节可玩</small>
+        <small className="text-secondary">已有 2 个章节可玩 • v0.2.0</small>
+      </div>
+
+      {/* 快捷键提示 */}
+      <div className="shortcuts-hint mt-2">
+        <small className="text-muted">💡 快捷键: N 新游戏 | C 继续</small>
       </div>
     </div>
   )
 }
 
-// 故事界面 - 改进版（打字机效果）
+// 故事界面 - 增强版（打字机效果+键盘导航）
 function StoryScreen({ scene, player, onChoice, isGameOver }) {
   const [displayedText, setDisplayedText] = useState('')
   const [isTyping, setIsTyping] = useState(true)
+  const [selectedChoice, setSelectedChoice] = useState(0)
   const typingRef = useRef(null)
+  const choicesRef = useRef(null)
 
   useEffect(() => {
     setDisplayedText('')
     setIsTyping(true)
-    
+    setSelectedChoice(0)
+
     let index = 0
     const text = scene.content
     const speed = 30 // 打字速度 ms
-    
+
     const type = () => {
       if (index < text.length) {
         setDisplayedText(text.substring(0, index + 1))
@@ -268,13 +315,32 @@ function StoryScreen({ scene, player, onChoice, isGameOver }) {
         setIsTyping(false)
       }
     }
-    
+
     type()
-    
+
     return () => {
       if (typingRef.current) clearTimeout(typingRef.current)
     }
   }, [scene.content])
+
+  // 键盘导航
+  useEffect(() => {
+    if (isGameOver || isTyping || !scene.choices) return
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        setSelectedChoice(prev => Math.min(prev + 1, scene.choices.length - 1))
+      } else if (e.key === 'ArrowUp' || e.key === 'k') {
+        setSelectedChoice(prev => Math.max(prev - 1, 0))
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        onChoice(scene.choices[selectedChoice])
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isTyping, isGameOver, scene.choices, selectedChoice, onChoice])
 
   const skipTyping = () => {
     if (typingRef.current) clearTimeout(typingRef.current)
@@ -288,52 +354,101 @@ function StoryScreen({ scene, player, onChoice, isGameOver }) {
         {scene.title}
         {isTyping && <span className="typing-cursor">|</span>}
       </h2>
-      
+
       <div className="card story-content" onClick={skipTyping}>
         <p>{displayedText}</p>
         {isTyping && (
           <div className="skip-hint">
-            <small>点击跳过...</small>
+            <small>点击或按空格跳过...</small>
           </div>
         )}
       </div>
-      
-      {!isTyping && (
-        <div className="choices mt-2" style={{ animation: 'slideIn 0.3s ease' }}>
-          {scene.choices?.map((choice, index) => (
-            <button 
+
+      {!isTyping && scene.choices && (
+        <div className="choices mt-2" ref={choicesRef} style={{ animation: 'slideIn 0.3s ease' }}>
+          {scene.choices.map((choice, index) => (
+            <button
               key={index}
-              className="btn btn-secondary choice-btn"
-              onClick={() => onChoice(choice)}
+              className={`btn choice-btn ${index === selectedChoice ? 'choice-selected' : ''}`}
+              onClick={() => {
+                setSelectedChoice(index)
+                onChoice(choice)
+              }}
+              onMouseEnter={() => setSelectedChoice(index)}
             >
               <span className="choice-icon">
                 {choice.effect?.unlocksSkill ? '🔓' : '➡️'}
               </span>
               {choice.text}
+              {index === selectedChoice && <span className="choice-hotkey">↩</span>}
             </button>
           ))}
         </div>
       )}
-      
+
       {isGameOver && (
         <div className="game-over-overlay">
           <h2 className="text-accent">游戏结束</h2>
           <p className="text-secondary mt-1">可以重新开始，尝试不同的选择</p>
+          <button className="btn btn-primary mt-2" onClick={() => window.location.reload()}>
+            🔄 重新开始
+          </button>
         </div>
       )}
     </div>
   )
 }
 
-// 战斗界面 - 改进版
+// 战斗界面 - 增强版（键盘操作+伤害数字动画）
 function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }) {
+  const [selectedAction, setSelectedAction] = useState(0)
+  const [damageNumbers, setDamageNumbers] = useState([])
   const maxPlayerHp = player.maxHp
   const maxEnemyHp = scene.enemy.maxHp
-  
+
+  // 键盘控制战斗
+  useEffect(() => {
+    if (!scene.playerAttacks) return
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        setSelectedAction(prev => Math.min(prev + 1, scene.playerAttacks.length - 1))
+      } else if (e.key === 'ArrowUp' || e.key === 'k') {
+        setSelectedAction(prev => Math.max(prev - 1, 0))
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        const attack = scene.playerAttacks[selectedAction]
+        const isLocked = attack.requireSkill && !player.skills.includes(attack.requireSkill)
+        if (!isLocked && playerHp > 0) {
+          onAttack(selectedAction)
+          // 显示伤害数字
+          setDamageNumbers(prev => [...prev, {
+            id: Date.now(),
+            value: attack.damage,
+            isPlayer: true,
+            timestamp: Date.now()
+          }])
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [scene.playerAttacks, selectedAction, player.skills, playerHp, onAttack])
+
+  // 清理伤害数字
+  useEffect(() => {
+    if (damageNumbers.length === 0) return
+    const timer = setTimeout(() => {
+      setDamageNumbers(prev => prev.filter(d => Date.now() - d.timestamp < 1000))
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [damageNumbers])
+
   return (
     <div className="battle-screen">
       <h2 className="scene-title">⚔️ {scene.title}</h2>
-      
+
       {/* 战斗动画反馈 */}
       {attackAnim && (
         <div className="battle-feedback">
@@ -342,7 +457,14 @@ function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }
           <span className="attack-text enemy">{attackAnim.enemy}</span>
         </div>
       )}
-      
+
+      {/* 伤害数字动画 */}
+      {damageNumbers.map(d => (
+        <div key={d.id} className={`damage-number ${d.isPlayer ? 'player-damage' : 'enemy-damage'}`}>
+          -{d.value}
+        </div>
+      ))}
+
       {/* 敌人信息 */}
       <div className="card enemy-card mt-2">
         <div className="enemy-header">
@@ -350,8 +472,8 @@ function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }
           <span className="hp-text">{enemyHp}/{maxEnemyHp}</span>
         </div>
         <div className="hp-bar">
-          <div 
-            className="hp-bar-fill enemy" 
+          <div
+            className="hp-bar-fill enemy"
             style={{ width: `${(enemyHp / maxEnemyHp) * 100}%` }}
           />
         </div>
@@ -364,14 +486,14 @@ function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }
           ))}
         </div>
       </div>
-      
+
       {/* 战斗区域 */}
       <div className="battle-arena flex-center mt-3">
         <div className="character player">
           <div className="character-avatar">👤</div>
           <div className="hp-bar">
-            <div 
-              className="hp-bar-fill player" 
+            <div
+              className="hp-bar-fill player"
               style={{ width: `${(playerHp / maxPlayerHp) * 100}%` }}
             />
           </div>
@@ -382,7 +504,7 @@ function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }
           <div className="character-avatar">🤖</div>
         </div>
       </div>
-      
+
       {/* 玩家行动 */}
       <div className="card player-actions mt-2">
         <h3 className="text-accent">你的行动</h3>
@@ -390,10 +512,14 @@ function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }
           {scene.playerAttacks.map((attack, index) => {
             const isLocked = attack.requireSkill && !player.skills.includes(attack.requireSkill)
             return (
-              <button 
+              <button
                 key={index}
-                className={`btn action-btn ${isLocked ? 'btn-locked' : 'btn-primary'}`}
-                onClick={() => !isLocked && onAttack(index)}
+                className={`btn action-btn ${index === selectedAction ? 'action-selected' : ''} ${isLocked ? 'btn-locked' : 'btn-primary'}`}
+                onClick={() => {
+                  setSelectedAction(index)
+                  if (!isLocked && playerHp > 0) onAttack(index)
+                }}
+                onMouseEnter={() => setSelectedAction(index)}
                 disabled={playerHp <= 0 || isLocked}
               >
                 <span className="action-name">
@@ -402,12 +528,16 @@ function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }
                 </span>
                 <span className="action-damage">💥 {attack.damage}</span>
                 <span className="action-desc">{attack.description}</span>
+                {index === selectedAction && <span className="action-hotkey">↩</span>}
               </button>
             )
           })}
         </div>
+        <div className="action-hints mt-1">
+          <small className="text-muted">↑↓ 切换 | Enter 确认</small>
+        </div>
       </div>
-      
+
       {/* 技能提示 */}
       {player.skills.length > 0 && (
         <div className="skills-reminder mt-2">
