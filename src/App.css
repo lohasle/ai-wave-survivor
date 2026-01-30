@@ -8,12 +8,14 @@
 .game-header {
   display: flex;
   justify-content: space-around;
+  align-items: center;
   padding: 12px 16px;
-  background: rgba(15, 52, 96, 0.8);
+  background: rgba(15, 52, 96, 0.9);
   border-bottom: 1px solid rgba(233, 69, 96, 0.3);
   position: sticky;
   top: 0;
   z-index: 100;
+  backdrop-filter: blur(10px);
 }
 
 .stat {
@@ -22,6 +24,7 @@
   gap: 6px;
   font-size: 14px;
   font-weight: 600;
+  transition: all 0.3s;
 }
 
 .stat-icon {
@@ -36,6 +39,38 @@
   color: var(--accent);
 }
 
+.stat.stress-warning .stat-value {
+  color: var(--warning);
+}
+
+.stat.stress-danger .stat-value {
+  color: var(--danger);
+  animation: pulse 1s infinite;
+}
+
+.stress-indicator {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: rgba(233, 69, 96, 0.2);
+  border-radius: 10px;
+  color: var(--danger);
+}
+
+.header-btn {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.header-btn:hover {
+  background: rgba(233, 69, 96, 0.3);
+  transform: rotate(180deg);
+}
+
 /* 主内容区 */
 .main-content {
   padding: 16px;
@@ -46,7 +81,12 @@
 /* 开始界面 */
 .start-screen {
   min-height: 80vh;
-  padding-top: 40px;
+  padding-top: 20px;
+}
+
+.game-logo {
+  font-size: 80px;
+  animation: float 3s ease-in-out infinite;
 }
 
 .game-title {
@@ -54,6 +94,7 @@
   text-align: center;
   color: var(--accent);
   text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+  margin-bottom: 8px;
 }
 
 .game-subtitle {
@@ -61,6 +102,17 @@
   color: var(--text-secondary);
   font-size: 14px;
   max-width: 280px;
+  margin-bottom: 16px;
+}
+
+.version-badge {
+  background: linear-gradient(135deg, var(--accent), #ff6b6b);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
 }
 
 .feature-list {
@@ -69,12 +121,24 @@
 }
 
 .feature-list li {
-  padding: 6px 0;
+  padding: 8px 0;
   border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 14px;
 }
 
 .feature-list li:last-child {
   border-bottom: none;
+}
+
+.btn-large {
+  padding: 16px 32px;
+  font-size: 18px;
+}
+
+.stats-preview {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 /* 故事界面 */
@@ -88,6 +152,21 @@
   margin-bottom: 16px;
   padding-bottom: 8px;
   border-bottom: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.typing-cursor {
+  animation: blink 1s infinite;
+  color: var(--accent);
+}
+
+.skip-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  opacity: 0.5;
 }
 
 .story-content {
@@ -95,6 +174,13 @@
   line-height: 1.8;
   font-size: 16px;
   white-space: pre-line;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.story-content:hover {
+  background: rgba(233, 69, 96, 0.1);
 }
 
 .choices {
@@ -109,6 +195,9 @@
   background: var(--bg-secondary);
   border: 1px solid rgba(233, 69, 96, 0.3);
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .choice-btn:hover {
@@ -116,9 +205,45 @@
   transform: translateX(8px);
 }
 
+.choice-icon {
+  font-size: 18px;
+}
+
 /* 战斗界面 */
 .battle-screen {
   animation: slideIn 0.3s ease;
+}
+
+.battle-feedback {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+.attack-text {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.attack-text.player {
+  background: rgba(78, 204, 163, 0.2);
+  color: var(--success);
+}
+
+.attack-text.enemy {
+  background: rgba(233, 69, 96, 0.2);
+  color: var(--danger);
+}
+
+.vs-small {
+  color: var(--text-secondary);
 }
 
 .enemy-card {
@@ -181,6 +306,7 @@
   background: rgba(233, 69, 96, 0.2);
   border-radius: 4px;
   color: var(--danger);
+  cursor: help;
 }
 
 /* 战斗 arena */
@@ -196,6 +322,7 @@
   font-size: 64px;
   margin-bottom: 8px;
   animation: float 2s ease-in-out infinite;
+  transition: transform 0.2s;
 }
 
 .character.player .character-avatar {
@@ -204,6 +331,14 @@
 
 .character.enemy .character-avatar {
   filter: drop-shadow(0 0 10px rgba(233, 69, 96, 0.5));
+}
+
+.character.player.attacking .character-avatar {
+  animation: attackPlayer 0.3s ease;
+}
+
+.character.enemy.attacking .character-avatar {
+  animation: attackEnemy 0.3s ease;
 }
 
 .vs {
@@ -234,7 +369,7 @@
   transition: all 0.2s;
 }
 
-.action-btn:hover {
+.action-btn:hover:not(:disabled) {
   background: var(--accent);
   transform: scale(1.02);
 }
@@ -244,9 +379,26 @@
   cursor: not-allowed;
 }
 
+.action-btn.btn-locked {
+  background: rgba(100, 100, 100, 0.2);
+  border-color: rgba(100, 100, 100, 0.3);
+}
+
+.btn-locked:hover {
+  background: rgba(100, 100, 100, 0.3);
+  transform: none;
+}
+
 .action-name {
   font-weight: bold;
   min-width: 80px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lock-badge {
+  font-size: 14px;
 }
 
 .action-damage {
@@ -256,6 +408,29 @@
 
 .action-desc {
   color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* 技能提醒 */
+.skills-reminder {
+  background: rgba(78, 204, 163, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(78, 204, 163, 0.2);
+}
+
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.skill-tag {
+  background: rgba(78, 204, 163, 0.2);
+  color: var(--success);
+  padding: 4px 10px;
+  border-radius: 12px;
   font-size: 12px;
 }
 
@@ -282,10 +457,36 @@
   50% { transform: translateY(-10px); }
 }
 
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes attackPlayer {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(20px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes attackEnemy {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(-20px); }
+  100% { transform: translateX(0); }
+}
+
 /* 响应式 */
 @media (max-width: 480px) {
   .game-title {
     font-size: 24px;
+  }
+  
+  .game-logo {
+    font-size: 60px;
   }
   
   .character-avatar {
@@ -300,5 +501,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+  }
+  
+  .action-name {
+    min-width: auto;
   }
 }

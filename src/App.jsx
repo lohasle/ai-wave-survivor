@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { GamePhase, createNewGame, addStress, takeDamage, healPlayer, unlockSkill, Skills } from './utils/gameState'
-import { Chapter1Data } from './data/chapters'
+import { Chapter1Data, Chapter2Data, Chapter3Data, AllChapters, findSceneById } from './data/chapters'
 import './App.css'
 
 function App() {
@@ -8,13 +8,33 @@ function App() {
     phase: GamePhase.START,
     player: createNewGame(),
     currentScene: null,
+    chapterId: null,
     battleResult: null
   }))
 
-  // 音效系统（预留）
-  const playSound = useCallback((type) => {
-    // TODO: 后续添加音效
-  }, [])
+  // 查找场景
+  const findScene = useCallback((sceneId, chapterId = gameState.chapterId) => {
+    if (sceneId === 'back-to-menu') {
+      return { id: 'menu', type: 'menu', title: '主菜单' }
+    }
+    if (sceneId === 'coming-soon') {
+      return Chapter3Data.scenes.find(s => s.id === 'coming-soon')
+    }
+    
+    // 优先从当前章节找
+    if (chapterId) {
+      const scene = findSceneById(chapterId, sceneId)
+      if (scene) return scene
+    }
+    
+    // 从所有章节找
+    for (const chapter of Object.values(AllChapters)) {
+      const scene = chapter.scenes.find(s => s.id === sceneId)
+      if (scene) return scene
+    }
+    
+    return null
+  }, [gameState.chapterId])
 
   // 开始新游戏
   const startNewGame = () => {
@@ -22,6 +42,7 @@ function App() {
       phase: GamePhase.STORY,
       player: createNewGame(),
       currentScene: Chapter1Data.scenes[0],
+      chapterId: 'chapter1',
       battleResult: null
     })
   }
@@ -76,26 +97,19 @@ function App() {
           battleResult: null
         }))
       } else {
+        // 更新章节ID
+        let newChapterId = gameState.chapterId
+        if (nextScene === 'chapter2-intro') newChapterId = 'chapter2'
+        if (nextScene === 'chapter3-intro') newChapterId = 'chapter3'
+        
         setGameState(prev => ({
           ...prev,
           phase: GamePhase.STORY,
-          currentScene: nextSceneData
+          currentScene: nextSceneData,
+          chapterId: newChapterId
         }))
       }
     }
-  }
-
-  // 查找场景
-  const findScene = (sceneId) => {
-    if (sceneId === 'chapter1-complete') {
-      return {
-        id: 'chapter1-complete',
-        title: '第一章完成',
-        type: 'result',
-        content: '第一章通关！更多内容开发中...'
-      }
-    }
-    return Chapter1Data.scenes.find(s => s.id === sceneId)
   }
 
   // 战斗逻辑
@@ -104,34 +118,47 @@ function App() {
     enemyHp: gameState.currentScene.enemy?.hp || 0,
     playerAttack: (attackIndex) => {
       const attack = gameState.currentScene.playerAttacks[attackIndex]
-      const newEnemyHp = gameState.currentScene.enemy.hp - attack.damage
-      const newPlayerHp = gameState.player.hp - (gameState.currentScene.enemy.attacks[Math.floor(Math.random() * 3)].damage)
+      const enemy = gameState.currentScene.enemy
+      const newEnemyHp = Math.max(0, enemy.hp - attack.damage)
+      const enemyAttack = enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)]
+      const newPlayerHp = Math.max(0, gameState.player.hp - enemyAttack.damage)
       
-      if (newEnemyHp <= 0) {
-        setGameState(prev => ({
-          ...prev,
-          phase: GamePhase.RESULT,
-          battleResult: { win: true }
-        }))
-      } else if (newPlayerHp <= 0) {
-        setGameState(prev => ({
-          ...prev,
-          phase: GamePhase.GAME_OVER,
-          currentScene: {
-            title: '战斗失败',
-            content: '你被AI击败了。在这个世界里，失败就意味着...'
-          }
-        }))
-      } else {
-        setGameState(prev => ({
-          ...prev,
-          player: { ...prev.player, hp: newPlayerHp },
-          currentScene: {
-            ...prev.currentScene,
-            enemy: { ...prev.currentScene.enemy, hp: newEnemyHp }
-          }
-        }))
-      }
+      // 播放攻击动画（通过状态更新触发）
+      setGameState(prev => ({
+        ...prev,
+        attackAnim: { player: attack.name, enemy: enemyAttack.name }
+      }))
+      
+      setTimeout(() => {
+        if (newEnemyHp <= 0) {
+          setGameState(prev => ({
+            ...prev,
+            phase: GamePhase.RESULT,
+            battleResult: { win: true },
+            attackAnim: null
+          }))
+        } else if (newPlayerHp <= 0) {
+          setGameState(prev => ({
+            ...prev,
+            phase: GamePhase.GAME_OVER,
+            currentScene: {
+              title: '战斗失败',
+              content: '你被AI击败了。在这个世界里，失败就意味着...\n\n但别灰心，你可以重新开始！'
+            },
+            attackAnim: null
+          }))
+        } else {
+          setGameState(prev => ({
+            ...prev,
+            player: { ...prev.player, hp: newPlayerHp },
+            currentScene: {
+              ...prev.currentScene,
+              enemy: { ...prev.currentScene.enemy, hp: newEnemyHp }
+            },
+            attackAnim: null
+          }))
+        }
+      }, 300)
     }
   } : null
 
@@ -158,6 +185,7 @@ function App() {
           enemyHp={battleState.enemyHp}
           onAttack={battleState.playerAttack}
           player={gameState.player}
+          attackAnim={gameState.attackAnim}
         />
       
       default:
@@ -167,7 +195,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header player={gameState.player} />
+      <Header player={gameState.player} phase={gameState.phase} />
       <main className="main-content">
         {renderContent()}
       </main>
@@ -179,8 +207,12 @@ function App() {
 function StartScreen({ onNewGame, onContinue }) {
   return (
     <div className="start-screen flex-col flex-center gap-3">
-      <h1 className="game-title">🤖 AI浪潮生存者 💼</h1>
+      <div className="game-logo">🤖</div>
+      <h1 className="game-title">AI浪潮生存者</h1>
       <p className="game-subtitle">在AI横行的世界里，找到你不可替代的价值</p>
+      
+      <div className="version-badge">v0.2.0 - 第二章开放</div>
+      
       <div className="card text-center">
         <h3 className="text-accent">游戏特色</h3>
         <ul className="feature-list mt-2">
@@ -191,52 +223,118 @@ function StartScreen({ onNewGame, onContinue }) {
           <li>😂 黑色幽默与职场梗</li>
         </ul>
       </div>
-      <button className="btn btn-primary" onClick={onNewGame}>
-        🆕 新游戏
+      
+      <button className="btn btn-primary btn-large" onClick={onNewGame}>
+        🆕 开始游戏
       </button>
       <button className="btn btn-secondary" onClick={onContinue}>
         📂 继续游戏
       </button>
+      
+      <div className="stats-preview">
+        <small className="text-secondary">已有 2 个章节可玩</small>
+      </div>
     </div>
   )
 }
 
-// 故事界面
+// 故事界面 - 改进版（打字机效果）
 function StoryScreen({ scene, player, onChoice, isGameOver }) {
+  const [displayedText, setDisplayedText] = useState('')
+  const [isTyping, setIsTyping] = useState(true)
+  const typingRef = useRef(null)
+
+  useEffect(() => {
+    setDisplayedText('')
+    setIsTyping(true)
+    
+    let index = 0
+    const text = scene.content
+    const speed = 30 // 打字速度 ms
+    
+    const type = () => {
+      if (index < text.length) {
+        setDisplayedText(text.substring(0, index + 1))
+        index++
+        typingRef.current = setTimeout(type, speed)
+      } else {
+        setIsTyping(false)
+      }
+    }
+    
+    type()
+    
+    return () => {
+      if (typingRef.current) clearTimeout(typingRef.current)
+    }
+  }, [scene.content])
+
+  const skipTyping = () => {
+    if (typingRef.current) clearTimeout(typingRef.current)
+    setDisplayedText(scene.content)
+    setIsTyping(false)
+  }
+
   return (
     <div className="story-screen">
-      <h2 className="scene-title">{scene.title}</h2>
-      <div className="card story-content">
-        <p>{scene.content}</p>
+      <h2 className="scene-title">
+        {scene.title}
+        {isTyping && <span className="typing-cursor">|</span>}
+      </h2>
+      
+      <div className="card story-content" onClick={skipTyping}>
+        <p>{displayedText}</p>
+        {isTyping && (
+          <div className="skip-hint">
+            <small>点击跳过...</small>
+          </div>
+        )}
       </div>
-      <div className="choices mt-2">
-        {scene.choices?.map((choice, index) => (
-          <button 
-            key={index}
-            className="btn btn-secondary choice-btn"
-            onClick={() => onChoice(choice)}
-          >
-            {choice.text}
-          </button>
-        ))}
-      </div>
+      
+      {!isTyping && (
+        <div className="choices mt-2" style={{ animation: 'slideIn 0.3s ease' }}>
+          {scene.choices?.map((choice, index) => (
+            <button 
+              key={index}
+              className="btn btn-secondary choice-btn"
+              onClick={() => onChoice(choice)}
+            >
+              <span className="choice-icon">
+                {choice.effect?.unlocksSkill ? '🔓' : '➡️'}
+              </span>
+              {choice.text}
+            </button>
+          ))}
+        </div>
+      )}
+      
       {isGameOver && (
         <div className="game-over-overlay">
           <h2 className="text-accent">游戏结束</h2>
+          <p className="text-secondary mt-1">可以重新开始，尝试不同的选择</p>
         </div>
       )}
     </div>
   )
 }
 
-// 战斗界面
-function BattleScreen({ scene, playerHp, enemyHp, onAttack, player }) {
+// 战斗界面 - 改进版
+function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }) {
   const maxPlayerHp = player.maxHp
   const maxEnemyHp = scene.enemy.maxHp
   
   return (
     <div className="battle-screen">
       <h2 className="scene-title">⚔️ {scene.title}</h2>
+      
+      {/* 战斗动画反馈 */}
+      {attackAnim && (
+        <div className="battle-feedback">
+          <span className="attack-text player">{attackAnim.player}</span>
+          <span className="vs-small">↔️</span>
+          <span className="attack-text enemy">{attackAnim.enemy}</span>
+        </div>
+      )}
       
       {/* 敌人信息 */}
       <div className="card enemy-card mt-2">
@@ -253,7 +351,7 @@ function BattleScreen({ scene, playerHp, enemyHp, onAttack, player }) {
         <div className="enemy-attacks mt-1">
           <small className="text-secondary">技能：</small>
           {scene.enemy.attacks.map((attack, i) => (
-            <span key={i} className="attack-badge">
+            <span key={i} className="attack-badge" title={attack.description}>
               {attack.name}
             </span>
           ))}
@@ -282,45 +380,98 @@ function BattleScreen({ scene, playerHp, enemyHp, onAttack, player }) {
       <div className="card player-actions mt-2">
         <h3 className="text-accent">你的行动</h3>
         <div className="actions-list mt-1">
-          {scene.playerAttacks.map((attack, index) => (
-            <button 
-              key={index}
-              className="btn btn-primary action-btn"
-              onClick={() => onAttack(index)}
-              disabled={playerHp <= 0}
-            >
-              <span className="action-name">{attack.name}</span>
-              <span className="action-damage">💥 {attack.damage}</span>
-              <span className="action-desc">{attack.description}</span>
-            </button>
-          ))}
+          {scene.playerAttacks.map((attack, index) => {
+            const isLocked = attack.requireSkill && !player.skills.includes(attack.requireSkill)
+            return (
+              <button 
+                key={index}
+                className={`btn action-btn ${isLocked ? 'btn-locked' : 'btn-primary'}`}
+                onClick={() => !isLocked && onAttack(index)}
+                disabled={playerHp <= 0 || isLocked}
+              >
+                <span className="action-name">
+                  {attack.name}
+                  {isLocked && <span className="lock-badge">🔒</span>}
+                </span>
+                <span className="action-damage">💥 {attack.damage}</span>
+                <span className="action-desc">{attack.description}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
+      
+      {/* 技能提示 */}
+      {player.skills.length > 0 && (
+        <div className="skills-reminder mt-2">
+          <small className="text-secondary">已装备技能：</small>
+          <div className="skill-tags">
+            {player.skills.map(skillId => {
+              const skill = Object.values(Skills).find(s => s.id === skillId)
+              return skill ? (
+                <span key={skillId} className="skill-tag">
+                  {skill.icon} {skill.name}
+                </span>
+              ) : null
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-// 顶部状态栏
-function Header({ player }) {
+// 顶部状态栏 - 改进版
+function Header({ player, phase }) {
+  const stressPercent = player.stress
+  let stressStatus = '正常'
+  let stressClass = ''
+  
+  if (stressPercent >= 80) {
+    stressStatus = '危险'
+    stressClass = 'stress-danger'
+  } else if (stressPercent >= 50) {
+    stressStatus = '警告'
+    stressClass = 'stress-warning'
+  }
+
   return (
     <header className="game-header">
-      <div className="stat">
+      <div className="stat" title="生命值">
         <span className="stat-icon">❤️</span>
         <span className="stat-value">{player.hp}/{player.maxHp}</span>
       </div>
-      <div className="stat">
+      
+      <div className={`stat ${stressClass}`} title="压力值">
         <span className="stat-icon">😰</span>
         <span className="stat-value">{player.stress}/100</span>
+        {stressPercent > 0 && (
+          <span className="stress-indicator">
+            {stressStatus}
+          </span>
+        )}
       </div>
-      <div className="stat">
+      
+      <div className="stat" title="职场声望">
         <span className="stat-icon">⭐</span>
         <span className="stat-value">{player.reputation}</span>
       </div>
+      
       {player.skills.length > 0 && (
-        <div className="stat skills">
+        <div className="stat skills" title="已解锁技能">
           <span className="stat-icon">🎯</span>
           <span className="stat-value">{player.skills.length}</span>
         </div>
+      )}
+      
+      {phase === GamePhase.STORY && (
+        <button 
+          className="header-btn" 
+          onClick={() => window.location.reload()}
+          title="重新开始"
+        >
+          🔄
+        </button>
       )}
     </header>
   )
