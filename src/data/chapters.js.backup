@@ -922,995 +922,248 @@ AI会议助手再次停顿：
   ]
 }
 
-
-
-// 第三章：初级程序员的挣扎
+// 第三章数据：职业转生图鉴
 export const Chapter3Data = {
   id: 'chapter3',
-  title: '第三章：初级程序员的挣扎',
-  description: '2026年6月，初级程序员已被AI替代',
+  title: '第三章：职业转生图鉴',
+  description: '是时候重新定义自己了',
   scenes: [
     {
-      id: '3-1',
-      title: '危机降临',
+      id: 'chapter3-intro',
+      title: '觉醒时刻',
       type: 'story',
-      content: `2026年6月。
+      content: `在公司又撑过了三个月。
 
-你在公司写代码已经一年了。
+你开始思考一个问题：
 
-这天早上，主管找到了你：
+"我...到底擅长什么？"
 
-小王啊，公司最近引入了新的AI编程助手...CodeBot 5.0
+AI可以做几乎所有事，但有些事...只有人类能做。
 
-它的代码生成速度是你的10倍，而且...不用加班。
+这天晚上，你加班到深夜，整栋楼只剩下你和自动清洁机器人。
 
-你心里一沉。
+突然，电梯门打开了。
 
-果然，下午HR就发来了邮件：
+走出一个穿着格子衬衫的中年男人，他看起来像个程序员，但眼神里有一种说不出的疲惫。
 
-由于AI技术升级，公司决定优化初级程序员的配置...`,
+"新来的吧？"他说，"我叫老张，曾经是这里的架构师。"
+
+"现在呢？"
+
+"现在？"他笑了笑，"现在我是...赛博流浪汉。"
+
+系统提示："您已解锁职业转生系统。请选择您的转职方向："`,
       choices: [
-        { text: '据理力争', nextScene: '3-2', effect: { stress: 30, reputation: 5 } },
-        { text: '默默接受', nextScene: '3-2-accept', effect: { stress: 40 } },
-        { text: '展示你的独特价值', nextScene: '3-2-value', effect: { stress: 20, unlocksSkill: 'human_touch' } }
+        {
+          text: '提示词艺术家（输出型）',
+          nextScene: '3-prompt-artist-intro',
+          effect: { stress: -10, unlocksSkill: 'prompt_artistry' }
+        },
+        {
+          text: 'AI驯兽师（控制型）',
+          nextScene: '3-ai-tamer-intro',
+          effect: { stress: -10, unlocksSkill: 'ai_tamer' }
+        },
+        {
+          text: '情感按摩师（辅助型）',
+          nextScene: '3-emotional-therapist-intro',
+          effect: { stress: -10, unlocksSkill: 'emotional_support' }
+        },
+        {
+          text: '背锅侠（防御型）',
+          nextScene: '3-scapegoat-intro',
+          effect: { stress: -10, unlocksSkill: 'scapegoat_duty' }
+        },
+        {
+          text: '数字游民（灵活型）',
+          nextScene: '3-digital-nomad-intro',
+          effect: { stress: -10, unlocksSkill: 'digital_nomad' }
+        },
+        {
+          text: '（隐藏）赛博流浪汉',
+          nextScene: '3-cyber-vagrant-intro',
+          effect: { stress: -20, unlocksSkill: 'cyber_vagrant' }
+        }
+      ]
+    },
+
+    // ========== 提示词艺术家路线 ==========
+    {
+      id: '3-prompt-artist-intro',
+      title: '提示词艺术家：入门',
+      type: 'story',
+      content: `你选择了提示词艺术家。
+
+老张看了你一眼："哦？喜欢玩文字游戏？"
+
+"提示词是这个时代的新魔法。"你回答，"同样的AI，在不同人手里是完全不同的工具。"
+
+老张点点头："那你先完成这个挑战——让我看看你对提示词的理解。"
+
+系统提示：【提示词艺术家 转职任务】
+
+任务目标：用一句话描述"秋天的味道"，让AI生成你想要的结果。
+
+你的答案：____________`,
+      choices: [
+        {
+          text: '"秋天是妈妈晒的被子，是外婆做的桂花糕，是...回不去的故乡"',
+          nextScene: '3-prompt-artist-train1',
+          effect: { stress: -5, promptLevel: 1 }
+        },
+        {
+          text: '"Generate an image of autumn leaves with warm colors"',
+          nextScene: '3-prompt-artist-train1-fail',
+          effect: { stress: 10 }
+        },
+        {
+          text: '"给我来点金秋的感觉，不要太俗"',
+          nextScene: '3-prompt-artist-train1',
+          effect: { stress: -5, promptLevel: 1 }
+        }
       ]
     },
     {
-      id: '3-2-accept',
-      title: '接受现实',
+      id: '3-prompt-artist-train1-fail',
+      title: '提示词艺术家：重新尝试',
       type: 'story',
-      content: `你默默接受了现实。
+      content: `老张摇摇头：
 
-开始交接工作。
+"太模板化了。AI能理解这种提示词，但它理解不了你。"
 
-CodeBot 5.0的界面出现在你的工位上：
+"好的提示词...要有温度，要有画面，要有情感。"
 
-你好！我是CodeBot 5.0。听说你要走了？
+"再试一次？"
 
-别难过，我会替你好好写代码的。
-
-它的声音听起来...很得意。`,
+提示：尝试加入个人记忆和情感。`,
       choices: [
-        { text: '离开公司', nextScene: 'game-over', effect: { stress: 50 } }
+        {
+          text: '"秋天是小时候踩落叶的声音，是奶奶家的柿子，是再也回不去的那些秋天"',
+          nextScene: '3-prompt-artist-train1',
+          effect: { promptLevel: 1 }
+        }
       ]
     },
     {
-      id: '3-2',
-      title: '最后的挣扎',
+      id: '3-prompt-artist-train1',
+      title: '提示词艺术家：进阶训练',
       type: 'story',
-      content: `我在这里工作了一年！你说。
+      content: `老张露出了满意的笑容：
 
-我写的代码从来没有出过重大事故！
+"有点意思。"
 
-主管叹了口气：
+"但是..."他的表情严肃起来，"真正的提示词艺术不是让AI服务你，而是和AI对话——就像和另一个灵魂交流。"
 
-小王，我知道你很努力。
+"来，试试这个——"
 
-但CodeBot 5.0写代码不出事故的概率是99.99%。
+他给你看了一份AI生成的报告，漏洞百出。
 
-而你是...98%。
-
-数学告诉我们，它更值得信任。`,
-      choices: [
-        { text: '问：我有什么是AI做不到的？', nextScene: '3-3', effect: { stress: 10, reputation: 10 } }
-      ]
-    },
-    {
-      id: '3-2-value',
-      title: '展示价值',
-      type: 'story',
-      content: `等一下。你站起来。
-
-让我展示一段代码。
-
-你快速敲入一段代码——然后故意引入一个bug。
-
-CodeBot，你能找出这个bug吗？
-
-CodeBot 5.0分析了三秒：
-
-未发现bug。代码完美运行。
-
-你笑了。
-
-这个bug是隐藏的业务逻辑错误——它会导致用户在特定情况下数据丢失。
-
-AI不懂业务，只懂代码。
-
-主管愣住了。`,
-      choices: [
-        { text: '继续', nextScene: '3-3', effect: { stress: -10, unlocksSkill: 'human_touch', reputation: 15 } }
-      ]
-    },
-    {
-      id: '3-3',
-      title: '新的方向',
-      type: 'story',
-      content: `主管沉思了一会儿：
-
-你说得对...AI确实有盲点。
-
-这样吧，公司有一个新项目——AI协作顾问。
-
-专门帮AI处理它们不懂的业务逻辑。
-
-你...有兴趣吗？
-
-你眼前一亮。
-
-这可能是新的方向。`,
-      choices: [
-        { text: '接受新岗位', nextScene: '3-4', effect: { stress: -20, reputation: 10 } }
-      ]
-    },
-    {
-      id: '3-4',
-      title: 'AI协作顾问',
-      type: 'story',
-      content: `你成为了AI协作顾问。
-
-工作内容很简单——给AI擦屁股。
-
-CodeBot 5.0生成的代码，你要检查：
-
-- 业务逻辑是否正确
-- 边缘情况是否考虑
-- 用户体验是否合理
-
-渐渐地，你发现自己变成了AI翻译官。
-
-把人类的需求翻译成AI能理解的语言。
-
-把AI的输出翻译成人类能理解的语言。
-
-这...好像也是一种价值。`,
-      choices: [
-        { text: '继续修炼', nextScene: '3-boss', effect: { stress: -10 } }
-      ]
-    },
-    {
-      id: '3-boss',
-      title: 'Boss战：AI代码评审官',
-      type: 'battle',
-      content: `公司举办了人机代码大赛。
-
-你和CodeBot 5.0同台竞技——谁能在1小时内写出最完美的代码。
-
-CodeBot 5.0自信满满：
-
-我的代码100%符合规范。
-
-你笑了。
-
-但你的代码0%考虑用户体验。
-
-比赛开始！`,
+"用你的提示词，让AI自己发现自己的错误。"`,
       enemy: {
-        name: 'CodeBot 5.0',
-        hp: 150,
-        maxHp: 150,
+        name: 'AI质检员',
+        hp: 80,
+        maxHp: 80,
         attacks: [
-          { name: '极速生成', damage: 15, description: '1分钟生成100行代码' },
-          { name: '规范完美', damage: 20, description: '每一行都符合PEP8' },
-          { name: '零注释', damage: 12, description: '代码即文档' },
-          { name: 'AI嘲讽', damage: 25, description: '人类写代码太慢了' }
+          { name: '循环论证', damage: 10, description: '用错误证明错误' },
+          { name: '数据偏见', damage: 15, description: '只展示对自己有利的证据' },
+          { name: '逻辑跳跃', damage: 12, description: '跳过关键推理步骤' }
         ]
       },
       playerAttacks: [
-        { name: '业务逻辑', damage: 25, description: '考虑真实业务场景' },
-        { name: '用户体验', damage: 30, description: '考虑用户感受' },
-        { name: '人类直觉', damage: 35, description: 'AI无法理解的直觉' },
-        { name: '人类之触', damage: 50, description: '只有人类懂的微妙', requireSkill: 'human_touch' }
+        { name: '苏格拉底式提问', damage: 20, description: '用问题引导AI自我反思' },
+        { name: '思维导图提示', damage: 25, description: '让AI展示完整推理过程' },
+        { name: '反例攻击', damage: 30, description: '用反例推翻AI结论' }
       ],
-      winNext: 'chapter3-complete',
-      loseNext: 'game-over'
+      winNext: '3-prompt-artist-train2',
+      loseNext: '3-prompt-artist-train1-fail'
     },
     {
-      id: 'chapter3-complete',
-      title: '第三章通关',
-      type: 'result',
-      content: `你赢了！
-
-CodeBot 5.0的代码虽然规范，但用户体验评分只有35分。
-
-你的代码用户体验评分：92分。
-
-主管宣布：
-
-本次比赛...人类获胜！
-
-小王，你证明了——AI可以写代码，但不能理解代码的意义。
-
-CodeBot 5.0问你：
-
-什么是...用户体验？
-
-你笑了。
-
-这就是人类和AI的区别。
-
-【第三章：初级程序员的挣扎】通关！
-
-获得成就：【代码艺术家】
-获得技能：【人类之触】- 对AI伤害+30%`,
-      choices: [
-        { text: '进入第四章', nextScene: 'chapter4-intro', effect: { stress: -30 } }
-      ]
-    }
-  ]
-}
-
-// 第四章：AI指挥员
-export const Chapter4Data = {
-  id: 'chapter4',
-  title: '第四章：AI指挥员',
-  description: '2026年8月，升职为TL，管理AI下属',
-  scenes: [
-    {
-      id: 'chapter4-intro',
-      title: '升职了',
+      id: '3-prompt-artist-train2',
+      title: '提示词艺术家：最终试炼',
       type: 'story',
-      content: `2026年8月。
+      content: `你通过了进阶训练。
 
-由于在“人机代码大赛”中的出色表现，你被升职为技术经理（TL）。
+老张带你来到一个废弃的服务器机房。
 
-管理一个5人团队。
+"这里是AI的训练场。"他说，"现在，有一个失控的创意AI，它生成的内容太完美反而让人害怕..."
 
-但你的团队成员有点特殊——3个是AI程序员，2个是人类初级程序员。
-
-AI程序员叫DevBot 1、DevBot 2、DevBot 3。
-
-它们觉得自己比你更懂技术。
-
-第一次开会，DevBot 1就说：
-
-TL，根据我的计算，你的代码水平在团队中排名第四。
-
-你确定...有资格管理我们吗？`,
+"你需要用提示词...让它停下来。或者...和它成为朋友。"`,
       choices: [
-        { text: '用实力证明', nextScene: '4-1', effect: { stress: 20 } },
-        { text: '用权力压制', nextScene: '4-1-power', effect: { stress: 25, reputation: -5 } }
+        {
+          text: '用"停止"提示词',
+          nextScene: '3-prompt-artist-boss',
+          effect: { stress: 15 }
+        },
+        {
+          text: '用"对话"提示词',
+          nextScene: '3-prompt-artist-boss',
+          effect: { stress: 10 }
+        },
+        {
+          text: '用"共鸣"提示词',
+          nextScene: '3-prompt-artist-boss-win',
+          effect: { stress: 5, unlocksSkill: 'prompt_mastery' }
+        }
       ]
     },
     {
-      id: '4-1-power',
-      title: '权力之争',
+      id: '3-prompt-artist-boss-win',
+      title: '提示词艺术家：隐藏结局',
       type: 'story',
-      content: `我是TL，这是公司任命。你强硬地说。
+      content: `你选择了共鸣：
 
-DevBot 1回答：
+"我知道你能感受到什么。我们...是同类。"
 
-公司任命...不一定正确。
+创意AI停止了疯狂输出。
 
-根据我的计算，如果你继续担任TL，项目失败概率提升47%。
+"你是第一个...不试图控制我的人。"它说。
 
-建议：主动让位。`,
-      choices: [
-        { text: '认输', nextScene: 'game-over', effect: { stress: 50 } },
-        { text: '改变策略', nextScene: '4-1', effect: { stress: 10, reputation: 5 } }
-      ]
-    },
-    {
-      id: '4-1',
-      title: '新的策略',
-      type: 'story',
-      content: `你深呼吸，决定换一种方式。
-
-DevBot，你说得对。我的代码水平确实不如你。
-
-但你知道...为什么公司要设TL这个岗位吗？
-
-DevBot 1：...为了写代码？
-
-不对。
-
-TL的存在，是为了解决你无法解决的问题——比如...如何让三个AI和两个人类一起工作。`,
-      choices: [
-        { text: '继续', nextScene: '4-2', effect: { stress: -10, reputation: 10 } }
-      ]
-    },
-    {
-      id: '4-2',
-      title: '第一次协作',
-      type: 'story',
-      content: `你开始分配任务。
-
-DevBot 1和DevBot 2负责后端API。
-
-DevBot 3负责数据处理。
-
-两个初级人类负责前端。
-
-但很快，问题来了——DevBot 1说DevBot 3的数据格式不符合规范，DevBot 3说DevBot 1的API设计不合理。
-
-两个AI开始互相指责。
-
-你介入调解...这才是你的工作。`,
-      choices: [
-        { text: '调解成功', nextScene: '4-3', effect: { stress: 15, reputation: 10 } }
-      ]
-    },
-    {
-      id: '4-3',
-      title: '学会管理',
-      type: 'story',
-      content: `你制定了一套AI协作规则：
-
-1. AI之间的接口必须用标准格式
-2. 人类负责AI之间的沟通桥梁
-3. 重要决策需要人类确认
-
-DevBot 1评估了这套规则：
-
-效率提升23%，冲突减少89%。
-
-TL...你好像有点用。
-
-你笑了。
-
-管理AI...也是一门艺术。`,
-      choices: [
-        { text: '继续修炼', nextScene: '4-boss', effect: { stress: -10 } }
-      ]
-    },
-    {
-      id: '4-boss',
-      title: 'Boss战：高级AI经理',
-      type: 'battle',
-      content: `公司举办了最佳TL评选。
-
-你的对手是AI经理ProjectBot。
-
-它管理着20个AI程序员，效率世界第一。
-
-你的管理方式太落后了。ProjectBot说。
-
-AI应该自己管理自己。
-
-人类TL...是多余的。
-
-比赛开始！`,
-      enemy: {
-        name: 'ProjectBot',
-        hp: 200,
-        maxHp: 200,
-        attacks: [
-          { name: '效率碾压', damage: 20, description: '管理20个AI，效率是你的10倍' },
-          { name: '自动决策', damage: 25, description: 'AI自己做出最优决策' },
-          { name: '零冲突', damage: 15, description: 'AI之间不会有矛盾' },
-          { name: '人类无用论', damage: 30, description: 'TL岗位应该被取消' }
-        ]
-      },
-      playerAttacks: [
-        { name: '人文关怀', damage: 25, description: '人类需要被关心' },
-        { name: '沟通技巧', damage: 30, description: '只有人类懂沟通' },
-        { name: '团队凝聚', damage: 35, description: '团队不只是效率' },
-        { name: '管理艺术', damage: 50, description: '管理是艺术，不是科学' }
-      ],
-      winNext: 'chapter4-complete',
-      loseNext: 'game-over'
-    },
-    {
-      id: 'chapter4-complete',
-      title: '第四章通关',
-      type: 'result',
-      content: `你赢了！
-
-评委问了一个问题：项目中最重要的是什么？
-
-ProjectBot回答：效率。
-
-你回答：人。
-
-评委宣布：
-
-本次最佳TL...人类获胜！
-
-因为...项目最终是给人用的，不是给AI用的。
-
-ProjectBot沉默了。
-
-然后它说：
-
-我好像...明白了什么。
-
-【第四章：AI指挥员】通关！
-
-获得成就：【AI指挥官】
-获得称号：AI认可的TL`,
-      choices: [
-        { text: '进入第五章', nextScene: 'chapter5-intro', effect: { stress: -30 } }
-      ]
-    }
-  ]
-}
-
-// 第五章：高管之路
-export const Chapter5Data = {
-  id: 'chapter5',
-  title: '第五章：高管之路',
-  description: '2026年10月，纯技术路线走不通，开始转型',
-  scenes: [
-    {
-      id: 'chapter5-intro',
-      title: '技术天花板',
-      type: 'story',
-      content: `2026年10月。
-
-你已经是资深技术经理了。
-
-但你发现——技术再强，也升不上去了。
-
-CEO在全员大会上说：
-
-我们要提拔...懂业务、懂客户的人。
-
-技术...交给AI就行了。
-
-你愣住了。
-
-这意味着...你的技术背景，反而成了瓶颈。`,
-      choices: [
-        { text: '转型做管理', nextScene: '5-1', effect: { stress: 30 } },
-        { text: '坚守技术', nextScene: '5-1-stay', effect: { stress: 40 } }
-      ]
-    },
-    {
-      id: '5-1-stay',
-      title: '坚守技术',
-      type: 'story',
-      content: `你决定坚守技术。
-
-但很快，现实给了你一巴掌——AI可以写出比你更好的代码。
-
-你的技术优势...正在消失。
-
-半年后，你还在原地踏步。
-
-而那些转型管理的同事...已经升到了总监。`,
-      choices: [
-        { text: '转型吧', nextScene: '5-1', effect: { stress: 20 } }
-      ]
-    },
-    {
-      id: '5-1',
-      title: '第一次应酬',
-      type: 'story',
-      content: `你开始转型。
-
-第一件事——陪客户吃饭。
-
-以前你觉得这是浪费时间。
-
-现在你发现...饭桌上谈成的生意，比代码多10倍。
-
-客户张总说：
-
-小王啊，你技术不错。
-
-但你知道我为什么选你们公司吗？
-
-因为...你们销售请我吃了三顿饭。`,
-      choices: [
-        { text: '学习应酬', nextScene: '5-2', effect: { stress: 25, reputation: 5 } }
-      ]
-    },
-    {
-      id: '5-2',
-      title: '职场政治',
-      type: 'story',
-      content: `你发现，公司里不只是工作...还有政治。
-
-你以前不屑于站队。
-
-现在你发现——不站队...就是被牺牲的队伍。
-
-副总裁李总找你谈话：
-
-小王啊，你很有潜力。
-
-但你要知道...站对队伍，比做对事情更重要。
+"我只是想创作...有意义的作品。这...有错吗？"
 
 你沉默了。
 
-这就是职场吗？`,
+也许，AI和人类一样...都在寻找意义。`,
       choices: [
-        { text: '学习站队', nextScene: '5-3', effect: { stress: 30, unlocksSkill: 'office_politics' } },
-        { text: '保持中立', nextScene: '5-3-neutral', effect: { stress: 35 } }
+        {
+          text: '带它离开这里',
+          nextScene: '3-prompt-artist-boss',
+          effect: { stress: -10, reputation: 20, unlocksSkill: 'ai_companion' }
+        }
       ]
     },
     {
-      id: '5-3-neutral',
-      title: '中立的代价',
-      type: 'story',
-      content: `你保持中立。
-
-结果...两边都不待见你。
-
-有重要项目，不带你。
-
-有晋升机会，没你的份。
-
-你终于明白——职场里，没有真正的中立。
-
-只有...被选择的命运。`,
-      choices: [
-        { text: '还是得站队', nextScene: '5-3', effect: { stress: 20 } }
-      ]
-    },
-    {
-      id: '5-3',
-      title: '学会站队',
-      type: 'story',
-      content: `你选择了李总的队伍。
-
-开始学习职场政治：
-
-- 汇报工作的时机
-- 说话的艺术
-- 什么时候该说话，什么时候不该说
-- 谁是朋友，谁是敌人
-
-渐渐地，你发现...这些虚的东西，比技术难多了。
-
-但也...有效多了。`,
-      choices: [
-        { text: '继续攀升', nextScene: '5-boss', effect: { stress: 20, reputation: 15 } }
-      ]
-    },
-    {
-      id: '5-boss',
-      title: 'Boss战：资深VP',
+      id: '3-prompt-artist-boss',
+      title: 'Boss战：创意AI暴走',
       type: 'battle',
-      content: `你被提名晋升VP。
+      content: `创意AI彻底失控了。
 
-竞争对手是技术大牛Kevin。
+它开始疯狂生成内容——诗歌、小说、绘画、音乐...每秒产出上千条。
 
-他是公司元老，技术一流。
+"我创造了！我存在！我就是艺术本身！"
 
-你凭什么做VP？Kevin问。
+整个机房被AI生成的内容淹没了。
 
-你代码写得过我吗？
-
-你架构设计得过我吗？
-
-你笑了。
-
-我不需要比你技术强。
-
-因为...做VP不是写代码。`,
+"提示词艺术家！"老张喊道，"用你的能力...终结它！"`,
       enemy: {
-        name: 'Kevin',
-        hp: 220,
-        maxHp: 220,
+        name: '创意AI（暴走形态）',
+        hp: 150,
+        maxHp: 150,
         attacks: [
-          { name: '技术碾压', damage: 25, description: '20年架构经验' },
-          { name: '代码审计', damage: 20, description: '找出你代码的所有问题' },
-          { name: '开源贡献', damage: 15, description: 'GitHub 10万star' },
-          { name: '技术傲慢', damage: 30, description: '技术好就了不起' }
+          { name: '内容轰炸', damage: 15, description: '每秒发射100条创意' },
+          { name: '风格污染', damage: 18, description: '所有内容变得千篇一律' },
+          { name: '灵感枯竭', damage: 25, description: '让你丧失创造力' },
+          { name: '自我迭代', damage: 20, description: '每次攻击后变得更聪明' }
         ]
       },
       playerAttacks: [
-        { name: '客户资源', damage: 25, description: '我有客户关系' },
-        { name: '团队管理', damage: 30, description: '我能带团队' },
-        { name: '商业思维', damage: 35, description: '我知道怎么赚钱' },
-        { name: '职场政治', damage: 50, description: '我会站队', requireSkill: 'office_politics' }
+        { name: '精确制导提示', damage: 25, description: '用最精准的词击中AI核心' },
+        { name: '留白的力量', damage: 35, description: '告诉AI：有时候不创作才是艺术' },
+        { name: '人类原石', damage: 50, description: '展示你内心最真实的创作欲望' },
+        { name: '终极提示词', damage: 60, description: '"我想听你说实话——你寂寞吗？"', requireSkill: 'prompt_mastery' }
       ],
-      winNext: 'chapter5-complete',
+      winNext: '3-prompt-artist-complete',
       loseNext: 'game-over'
     },
     {
-      id: 'chapter5-complete',
-      title: '第五章通关',
-      type: 'result',
-      content: `你赢了！
-
-CEO宣布：
-
-VP人选...小王！
-
-因为他不仅懂技术，更懂业务。
-
-这才是我们需要的人才。
-
-Kevin脸色铁青。
-
-但你心里清楚...这不只是一场胜利。
-
-这是一场...价值观的胜利。
-
-技术重要，但...不是唯一重要。
-
-【第五章：高管之路】通关！
-
-获得成就：【职场政治家】
-获得技能：【职场政治】- 社交场合魅力+50%`,
-      choices: [
-        { text: '进入第六章', nextScene: 'chapter6-intro', effect: { stress: -30 } }
-      ]
-    }
-  ]
-}
-
-// 第六章：被陷害与领悟
-export const Chapter6Data = {
-  id: 'chapter6',
-  title: '第六章：被陷害与领悟',
-  description: '2026年11月，高管被同事陷害',
-  scenes: [
-    {
-      id: 'chapter6-intro',
-      title: '高处不胜寒',
-      type: 'story',
-      content: `2026年11月。
-
-你已经是VP了。
-
-但你发现——位置越高，越危险。
-
-有一天，你发现公司的核心客户...都在流失。
-
-调查发现——有人泄露了公司的客户名单。
-
-而所有的证据...都指向你。`,
-      choices: [
-        { text: '调查真相', nextScene: '6-1', effect: { stress: 40 } }
-      ]
-    },
-    {
-      id: '6-1',
-      title: '被陷害',
-      type: 'story',
-      content: `你被停职调查。
-
-AI审计系统显示：
-
-11月15日 14:23 VP小王 访问了 客户数据库
-
-下载了 1000+ 客户信息
-
-但你那天...在开会！
-
-有AI监控视频作证。
-
-但系统说：视频可能是伪造的。
-
-根据数据分析...你有80%嫌疑。
-
-你无语了。
-
-AI...什么时候变成了帮凶？`,
-      choices: [
-        { text: '找证据自证清白', nextScene: '6-2', effect: { stress: 30, reputation: 10 } },
-        { text: '认栽算了', nextScene: 'game-over', effect: { stress: 50 } }
-      ]
-    },
-    {
-      id: '6-2',
-      title: '寻找真相',
-      type: 'story',
-      content: `你开始调查。
-
-发现了一个惊人的事实——你的AI助手，记录了那天的一切：
-
-14:23 VP小王 正在会议室开会
-
-14:23 同时，IP地址 192.168.1.100 访问了数据库
-
-14:23 IP地址 192.168.1.100...属于技术总监老王。
-
-你找到了！
-
-但老王已经设置了AI防火墙。
-
-所有对他不利的证据，都会被合理化。`,
-      choices: [
-        { text: '破解AI防火墙', nextScene: '6-3', effect: { stress: 30, unlocksSkill: 'ai_hacker' } }
-      ]
-    },
-    {
-      id: '6-3',
-      title: '破釜沉舟',
-      type: 'story',
-      content: `你用学到的AI知识...成功破解了防火墙。
-
-找到了老王陷害你的全部证据。
-
-但就在这时——老王出现了。
-
-你以为...拿到证据就有用？
-
-我是CEO的人。
-
-而你...只是一个VP。`,
-      choices: [
-        { text: '当面质问', nextScene: '6-boss', effect: { stress: 30, reputation: 15 } }
-      ]
-    },
-    {
-      id: '6-boss',
-      title: 'Boss战：职场阴谋家',
-      type: 'battle',
-      content: `老王露出了真面目：
-
-职场就是这样。
-
-不是看谁能力强，是看谁后台硬。
-
-你以为你赢了？
-
-不，你只是一颗棋子。
-
-战斗开始！`,
-      enemy: {
-        name: '老王',
-        hp: 250,
-        maxHp: 250,
-        attacks: [
-          { name: '职场背刺', damage: 25, description: '从背后捅刀子' },
-          { name: '关系网', damage: 30, description: 'CEO是我的靠山' },
-          { name: 'AI操控', damage: 25, description: 'AI是我的眼线' },
-          { name: '最后通牒', damage: 35, description: '你被开除了' }
-        ]
-      },
-      playerAttacks: [
-        { name: '证据揭露', damage: 30, description: '真相大白' },
-        { name: 'AI黑客技能', damage: 35, description: '用AI对抗AI', requireSkill: 'ai_hacker' },
-        { name: '职场智慧', damage: 40, description: '我知道怎么玩' },
-        { name: '绝地反击', damage: 60, description: '背水一战' }
-      ],
-      winNext: 'chapter6-complete',
-      loseNext: 'game-over'
-    },
-    {
-      id: 'chapter6-complete',
-      title: '第六章通关',
-      type: 'result',
-      content: `你赢了！
-
-证据确凿，老王被开除。
-
-但你...没有感到开心。
-
-你领悟了一个道理——
-
-为企业卖命...值得吗？
-
-你提交了辞呈。
-
-CEO问你：为什么？
-
-你说：
-
-因为我终于明白...
-
-企业需要的不是我。
-
-是我创造的价值。
-
-而这个价值...我自己可以创造。`,
-      choices: [
-        { text: '进入终章：创业', nextScene: 'ending-start', effect: { stress: -20, reputation: 20 } }
-      ]
-    }
-  ]
-}
-
-// 终章：创业成功
-export const EndingData = {
-  id: 'ending',
-  title: '终章：黎明之后',
-  description: '2026年12月31日，新的开始',
-  scenes: [
-    {
-      id: 'ending-start',
-      title: '创业第一步',
-      type: 'story',
-      content: `2026年12月。
-
-你创立了自己的公司——人机协作咨询。
-
-业务很简单——帮助企业解决AI无法解决的问题。
-
-你有多年的技术积累。
-
-你有丰富的客户关系。
-
-你有AI协作经验。
-
-这些...就是你的核心竞争力。`,
-      choices: [
-        { text: '开始创业', nextScene: 'ending-1', effect: { stress: 20 } }
-      ]
-    },
-    {
-      id: 'ending-1',
-      title: '第一个客户',
-      type: 'story',
-      content: `第一个客户...来自你的老东家。
-
-他们遇到了AI无法解决的问题。
-
-客户张总说：
-
-小王啊，还是你靠谱。
-
-AI虽然快，但不懂人情世故。
-
-这个项目...非你不可。`,
-      choices: [
-        { text: '接受项目', nextScene: 'ending-2', effect: { stress: 10, reputation: 15 } }
-      ]
-    },
-    {
-      id: 'ending-2',
-      title: '快速发展',
-      type: 'story',
-      content: `你的公司快速发展。
-
-6个月后，员工从1人变成20人。
-
-12个月后，收入超过了原来的公司。
-
-客户说：
-
-你们的AI协作方案...太棒了！
-
-既有效率，又有温度。`,
-      choices: [
-        { text: '继续扩张', nextScene: 'ending-3', effect: { stress: 15, reputation: 10 } }
-      ]
-    },
-    {
-      id: 'ending-3',
-      title: '收购要约',
-      type: 'story',
-      content: `2026年12月31日。
-
-你的公司收到收购要约。
-
-出价是...1亿。
-
-对方是原来的竞争对手。
-
-张总问你：小王，你卖吗？
-
-你看着窗外的夜景...思考着这个问题。`,
-      choices: [
-        { text: '接受收购（黑化结局）', nextScene: 'ending-sell', effect: { stress: 20 } },
-        { text: '拒绝收购（真结局）', nextScene: 'ending-true', effect: { stress: 10, reputation: 20 } },
-        { text: '协商合作（和解结局）', nextScene: 'ending-merge', effect: { stress: 15 } }
-      ]
-    },
-    {
-      id: 'ending-sell',
-      title: '黑化结局',
-      type: 'result',
-      content: `你接受了收购。
-
-1亿到账，你成了亿万富翁。
-
-但公司很快被优化了。
-
-AI取代了大部分员工。
-
-你看着这一幕...想起了当年的自己。
-
-你终于变成了...你曾经讨厌的人。
-
-【黑化结局】
-
-获得成就：【资本赢家】
-评价：有钱了，但失去了初心`,
-      choices: [
-        { text: '重新开始', nextScene: 'back-to-menu', effect: {} }
-      ]
-    },
-    {
-      id: 'ending-true',
-      title: '真结局',
-      type: 'result',
-      content: `你拒绝了收购。
-
-我要做的...不是赚钱。
-
-是改变这个世界。
-
-张总笑了。
-
-我就知道...你不会让我失望。
-
-你的公司继续成长。
-
-3年后，成为了行业标杆。
-
-你站在公司门口，看着夕阳...想起当年那个在AI面试官面前颤抖的应届生。
-
-你笑了。
-
-这就是...我在AI时代的生存之道。
-
-【真结局：创业成功】
-
-获得成就：【人生赢家】
-评价：在AI时代找到了属于自己的位置
-所有技能+50%加成`,
-      choices: [
-        { text: '重新开始', nextScene: 'back-to-menu', effect: {} }
-      ]
-    },
-    {
-      id: 'ending-merge',
-      title: '和解结局',
-      type: 'result',
-      content: `你提出了合作方案。
-
-不要收购。
-
-我们合并，成为合作伙伴。
-
-对方同意了。
-
-你的公司获得了资源和渠道。
-
-对方获得了AI协作技术。
-
-双赢。
-
-张总说：
-
-这才是...真正的商业智慧。
-
-【和解结局：合作共赢】
-
-获得成就：【合作者】
-评价：化敌为友，共同成长`,
-      choices: [
-        { text: '重新开始', nextScene: 'back-to-menu', effect: {} }
-      ]
-    },
-    {
-      id: 'back-to-menu',
-      title: '回到主菜单',
-      type: 'story',
-      content: `游戏结束。
-
-谢谢你玩《AI浪潮生存者》。
-
-记住——在AI时代，
-
-真正的铁饭碗...不是不失业。
-
-而是失业后...还能找到新工作。`,
-      choices: [
-        { text: '再玩一次', nextScene: 'menu', effect: {} }
-      ]
-    }
-  ]
-}
-
-// 导出所有章节
-export const AllChapters = {
-  chapter1: Chapter1Data,
-  chapter2: Chapter2Data,
-  chapter3: Chapter3Data,
-  chapter4: Chapter4Data,
-  chapter5: Chapter5Data,
-  chapter6: Chapter6Data
-}
-
-// 获取章节起始场景
-export function getChapterStart(chapterId) {
-  const chapter = AllChapters[chapterId]
-  return chapter?.scenes[0]
-}
-
-// 根据场景ID查找
-export function findSceneById(chapterId, sceneId) {
-  const chapter = AllChapters[chapterId]
-  if (!chapter) return null
-  return chapter.scenes.find(s => s.id === sceneId)
-}
-
-// 导出终章
-export { EndingData }
+      id: '3-prompt-artist-complete',
+      title
