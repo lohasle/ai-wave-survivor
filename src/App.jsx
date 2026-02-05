@@ -251,6 +251,9 @@ function App() {
       <main className="main-content">
         {renderContent()}
       </main>
+      {gameState.phase === GamePhase.STORY && !isTyping && gameState.currentScene?.choices && (
+        <ActionArea choices={gameState.currentScene.choices} onChoice={makeChoice} />
+      )}
     </div>
   )
 }
@@ -350,196 +353,28 @@ function StartScreen({ onNewGame, onContinue }) {
 }
 
 // 故事界面 - 增强版
-function StoryScreen({ scene, player, onChoice, isGameOver }) {
-  const [displayedText, setDisplayedText] = useState('')
-  const [isTyping, setIsTyping] = useState(true)
-  const [selectedChoice, setSelectedChoice] = useState(0)
-  const typingRef = useRef(null)
-
-  useEffect(() => {
-    setDisplayedText('')
-    setIsTyping(true)
-    setSelectedChoice(0)
-
-    let index = 0
-    const text = scene.content
-    const speed = 30
-
-    const type = () => {
-      if (index < text.length) {
-        setDisplayedText(text.substring(0, index + 1))
-        index++
-        typingRef.current = setTimeout(type, speed)
-      } else {
-        setIsTyping(false)
-      }
-    }
-
-    type()
-
-    return () => {
-      if (typingRef.current) clearTimeout(typingRef.current)
-    }
-  }, [scene.content])
-
-  useEffect(() => {
-    if (isGameOver || isTyping || !scene.choices) return
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowDown' || e.key === 'j') {
-        setSelectedChoice(prev => Math.min(prev + 1, scene.choices.length - 1))
-      } else if (e.key === 'ArrowUp' || e.key === 'k') {
-        setSelectedChoice(prev => Math.max(prev - 1, 0))
-      } else if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        onChoice(scene.choices[selectedChoice])
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isTyping, isGameOver, scene.choices, selectedChoice, onChoice])
-
-  const skipTyping = () => {
-    if (typingRef.current) clearTimeout(typingRef.current)
-    setDisplayedText(scene.content)
-    setIsTyping(false)
-  }
-
+function StoryScreen({ scene }) {
+  // 简化：只显示内容，打字效果由 action-area 控制
   return (
     <div className="story-screen">
-      <h2 className="scene-title">
-        {scene.title}
-        {isTyping && <span className="typing-cursor">|</span>}
-      </h2>
-
-      <div className="card story-content" onClick={skipTyping}>
-        <p>{displayedText}</p>
-        {isTyping && (
-          <div className="skip-hint">
-            <small>点击或按空格跳过...</small>
-          </div>
-        )}
+      <h2 className="scene-title">{scene.title}</h2>
+      <div className="story-content">
+        <p>{scene.content}</p>
       </div>
-
-      {!isTyping && scene.choices && (
-        <div className="choices mt-2" style={{ animation: 'slideIn 0.3s ease' }}>
-          {scene.choices.map((choice, index) => (
-            <button
-              key={index}
-              className={`btn choice-btn ${index === selectedChoice ? 'choice-selected' : ''}`}
-              onClick={() => {
-                setSelectedChoice(index)
-                onChoice(choice)
-              }}
-              onMouseEnter={() => setSelectedChoice(index)}
-            >
-              <span className="choice-icon">
-                {choice.effect?.unlocksSkill ? '🔓' : '➡️'}
-              </span>
-              {choice.text}
-              {index === selectedChoice && <span className="choice-hotkey">↩</span>}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {isGameOver && (
-        <div className="game-over-overlay">
-          <h2 className="text-accent">游戏结束</h2>
-          <p className="text-secondary mt-1">可以重新开始，尝试不同的选择</p>
-          <button className="btn btn-primary mt-2" onClick={() => window.location.reload()}>
-            🔄 重新开始
-          </button>
-        </div>
-      )}
     </div>
   )
 }
 
-// 战斗界面 - 增强版
-function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }) {
-  const [selectedAction, setSelectedAction] = useState(0)
-  const [damageNumbers, setDamageNumbers] = useState([])
+// 战斗界面 - 简化版
+function BattleScreen({ scene, playerHp, enemyHp, player }) {
   const maxPlayerHp = player.maxHp
   const maxEnemyHp = scene.enemy.maxHp
-
-  useEffect(() => {
-    if (!scene.playerAttacks) return
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowDown' || e.key === 'j') {
-        setSelectedAction(prev => Math.min(prev + 1, scene.playerAttacks.length - 1))
-      } else if (e.key === 'ArrowUp' || e.key === 'k') {
-        setSelectedAction(prev => Math.max(prev - 1, 0))
-      } else if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        const attack = scene.playerAttacks[selectedAction]
-        const isLocked = attack.requireSkill && !player.skills.includes(attack.requireSkill)
-        if (!isLocked && playerHp > 0) {
-          onAttack(selectedAction)
-          setDamageNumbers(prev => [...prev, {
-            id: Date.now(),
-            value: attack.damage,
-            isPlayer: true,
-            timestamp: Date.now()
-          }])
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [scene.playerAttacks, selectedAction, player.skills, playerHp, onAttack])
-
-  useEffect(() => {
-    if (damageNumbers.length === 0) return
-    const timer = setTimeout(() => {
-      setDamageNumbers(prev => prev.filter(d => Date.now() - d.timestamp < 1000))
-    }, 1000)
-    return () => clearTimeout(timer)
-  }, [damageNumbers])
 
   return (
     <div className="battle-screen">
       <h2 className="scene-title">⚔️ {scene.title}</h2>
 
-      {attackAnim && (
-        <div className="battle-feedback">
-          <span className="attack-text player">{attackAnim.player}</span>
-          <span className="vs-small">↔️</span>
-          <span className="attack-text enemy">{attackAnim.enemy}</span>
-        </div>
-      )}
-
-      {damageNumbers.map(d => (
-        <div key={d.id} className={`damage-number ${d.isPlayer ? 'player-damage' : 'enemy-damage'}`}>
-          -{d.value}
-        </div>
-      ))}
-
-      <div className="card enemy-card mt-2">
-        <div className="enemy-header">
-          <span className="enemy-name">👹 {scene.enemy.name}</span>
-          <span className="hp-text">{enemyHp}/{maxEnemyHp}</span>
-        </div>
-        <div className="hp-bar">
-          <div
-            className="hp-bar-fill enemy"
-            style={{ width: `${(enemyHp / maxEnemyHp) * 100}%` }}
-          />
-        </div>
-        <div className="enemy-attacks mt-1">
-          <small className="text-secondary">技能：</small>
-          {scene.enemy.attacks.map((attack, i) => (
-            <span key={i} className="attack-badge" title={attack.description}>
-              {attack.name}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="battle-arena flex-center mt-3">
+      <div className="battle-arena">
         <div className="character player">
           <div className="character-avatar">👤</div>
           <div className="hp-bar">
@@ -553,56 +388,15 @@ function BattleScreen({ scene, playerHp, enemyHp, onAttack, player, attackAnim }
         <div className="vs">VS</div>
         <div className="character enemy">
           <div className="character-avatar">🤖</div>
-        </div>
-      </div>
-
-      <div className="card player-actions mt-2">
-        <h3 className="text-accent">你的行动</h3>
-        <div className="actions-list mt-1">
-          {scene.playerAttacks.map((attack, index) => {
-            const isLocked = attack.requireSkill && !player.skills.includes(attack.requireSkill)
-            return (
-              <button
-                key={index}
-                className={`btn action-btn ${index === selectedAction ? 'action-selected' : ''} ${isLocked ? 'btn-locked' : 'btn-primary'}`}
-                onClick={() => {
-                  setSelectedAction(index)
-                  if (!isLocked && playerHp > 0) onAttack(index)
-                }}
-                onMouseEnter={() => setSelectedAction(index)}
-                disabled={playerHp <= 0 || isLocked}
-              >
-                <span className="action-name">
-                  {attack.name}
-                  {isLocked && <span className="lock-badge">🔒</span>}
-                </span>
-                <span className="action-damage">💥 {attack.damage}</span>
-                <span className="action-desc">{attack.description}</span>
-                {index === selectedAction && <span className="action-hotkey">↩</span>}
-              </button>
-            )
-          })}
-        </div>
-        <div className="action-hints mt-1">
-          <small className="text-muted">↑↓ 切换 | Enter 确认</small>
-        </div>
-      </div>
-
-      {player.skills.length > 0 && (
-        <div className="skills-reminder mt-2">
-          <small className="text-secondary">已装备技能：</small>
-          <div className="skill-tags">
-            {player.skills.map(skillId => {
-              const skill = Object.values(Skills).find(s => s.id === skillId)
-              return skill ? (
-                <span key={skillId} className="skill-tag">
-                  {skill.icon} {skill.name}
-                </span>
-              ) : null
-            })}
+          <div className="hp-bar">
+            <div
+              className="hp-bar-fill enemy"
+              style={{ width: `${(enemyHp / maxEnemyHp) * 100}%` }}
+            />
           </div>
+          <span className="hp-text small">{enemyHp}/{maxEnemyHp}</span>
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -660,6 +454,35 @@ function Header({ player, phase }) {
         </button>
       )}
     </header>
+  )
+}
+
+// 操作区域 - 固定底部
+function ActionArea({ choices, onChoice }) {
+  const [selectedIndex, setSelectedIndex] = useState(0)
+
+  // 如果没有 choices，不显示
+  if (!choices || choices.length === 0) return null
+
+  return (
+    <div className="action-area">
+      <div className="choices">
+        {choices.map((choice, index) => (
+          <button
+            key={index}
+            className={`btn choice-btn ${index === selectedIndex ? 'choice-selected' : ''}`}
+            onClick={() => onChoice(choice)}
+            onMouseEnter={() => setSelectedIndex(index)}
+          >
+            <span className="choice-icon">
+              {choice.effect?.unlocksSkill ? '🔓' : '➡️'}
+            </span>
+            <span className="choice-text">{choice.text}</span>
+            {index === selectedIndex && <span className="choice-hotkey">↩</span>}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
