@@ -1913,4 +1913,3 @@ export function findSceneById(chapterId, sceneId) {
 }
 
 // 导出终章
-export { EndingData }
