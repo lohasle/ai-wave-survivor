@@ -19,12 +19,17 @@ jobs:
       
       - name: Build
         run: |
-          npm install -g vite
-          npm install
+          npm init -y > /dev/null 2>&1
+          npm install vite @vitejs/plugin-react --save-dev
           npx vite build
       
       - name: Deploy
         run: |
-          npx gh-pages -d dist -r https://github.com/lohasle/ai-wave-survivor.git
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b gh-pages
+          cp -r dist/* .
+          rm -rf dist
+          git add -A
+          git commit -m "Deploy: $(date '+%Y-%m-%d %H:%M')" || true
+          git push -f origin gh-pages
