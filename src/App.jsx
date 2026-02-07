@@ -11,6 +11,15 @@ function App() {
     chapterId: null,
     battleResult: null
   }))
+  
+  // 打字机效果状态
+  const [isTyping, setIsTyping] = useState(false)
+    phase: GamePhase.START,
+    player: createNewGame(),
+    currentScene: null,
+    chapterId: null,
+    battleResult: null
+  }))
 
   // 全局快捷键处理
   useEffect(() => {
