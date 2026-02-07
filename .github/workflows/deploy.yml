@@ -6,30 +6,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
       
-      - name: Build
+      - name: Install and Build
         run: |
-          npm init -y > /dev/null 2>&1
-          npm install vite @vitejs/plugin-react --save-dev
-          npx vite build
+          npm install
+          npm run build
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Deploy
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b gh-pages
-          cp -r dist/* .
-          rm -rf dist
-          git add -A
-          git commit -m "Deploy: $(date '+%Y-%m-%d %H:%M')" || true
-          git push -f origin gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+          git-token: ${{ secrets.GITHUB_TOKEN }}
