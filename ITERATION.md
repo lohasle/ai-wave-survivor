@@ -1,5 +1,48 @@
 # ai-wave-survivor 迭代记录
 
+## 迭代 2026-02-25
+
+### 本次改进
+
+#### 1. package.json 优化
+- 版本号更新: 0.2.0 → 0.4.0（与 README 保持一致）
+- 添加项目元数据: description, author, license, repository, homepage, keywords
+- 新增开发依赖:
+  - `eslint` + `eslint-plugin-react` + `eslint-plugin-react-hooks` - 代码规范检查
+  - `vitest` + `@vitest/coverage-v8` - 单元测试框架
+  - `@testing-library/react` + `@testing-library/jest-dom` - React 组件测试
+  - `jsdom` - DOM 模拟环境
+- 新增 npm scripts:
+  - `npm run lint` - 代码检查
+  - `npm run lint:fix` - 自动修复代码问题
+  - `npm run test` - 运行测试
+  - `npm run test:watch` - 监听模式测试
+  - `npm run test:coverage` - 测试覆盖率报告
+- 添加 engines 字段指定 Node.js >= 18
+
+#### 2. CONTRIBUTING.md 完善
+- 添加完整的中英双语贡献指南
+- 包含行为准则、开发环境设置、代码规范
+- 定义提交规范（Conventional Commits）
+- 详细的 Pull Request 流程
+- 贡献类型分类（游戏内容、Bug修复、新功能、文档、测试）
+
+#### 3. GitHub Actions CI 增强
+- **lint job**: ESLint 代码检查
+- **test job**: Vitest 单元测试 + Codecov 覆盖率上传
+- **build job**: 构建验证 + 产物上传
+- **lighthouse job**: PR 时运行 Lighthouse 性能审计
+- 优化依赖缓存和构建输出信息
+
+#### 4. 竞品分析文档更新
+- 添加新竞品: Aibyss (AI 编程生存竞赛)
+- 更新对比分析（6章+终章 vs 竞品平均）
+- 技术对比表格
+- 更新差距清单状态（已完成项标记）
+- 新增"开源社区驱动内容"创新方向
+
+---
+
 ## 迭代 2026-02-06 15:29
 
 - **操作**: OpenClaw Bot 持续迭代

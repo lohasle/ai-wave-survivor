@@ -30,11 +30,13 @@ env/
 *.swp
 *.swo
 *.sublime-*
+*.iml
 
 # OS
 .DS_Store
 Thumbs.db
 ehthumbs.db
+Desktop.ini
 
 # Logs
 *.log
@@ -48,12 +50,18 @@ pnpm-debug.log*
 .cache/
 .parcel-cache/
 .eslintcache
+.vite/
 
 # Test
 coverage/
 .nyc_output/
+test-results/
 
 # Misc
 *.bak
 *.tmp
 *.temp
+*.local
+
+# Lighthouse
+.lighthouseci/
