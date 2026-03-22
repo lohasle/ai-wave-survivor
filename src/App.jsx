@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { GamePhase, createNewGame, addStress, takeDamage, healPlayer, unlockSkill, Skills, saveGame, loadGame, hasSaveGame, soundManager } from './utils/gameState'
+import React, { useState, useEffect, useCallback } from 'react'
+import { GamePhase, createNewGame, addStress, takeDamage, healPlayer, unlockSkill, saveGame, loadGame, hasSaveGame, soundManager } from './utils/gameState'
 import { Chapter1Data, Chapter2Data, Chapter3Data, AllChapters, findSceneById } from './data/chapters'
 import './App.css'
 
@@ -12,14 +12,8 @@ function App() {
     battleResult: null
   }))
   
-  // 打字机效果状态
-  const [isTyping, setIsTyping] = useState(false)
-    phase: GamePhase.START,
-    player: createNewGame(),
-    currentScene: null,
-    chapterId: null,
-    battleResult: null
-  }))
+  // 当前版本未启用打字机，保留布尔值用于按钮显隐逻辑
+  const isTyping = false
 
   // 全局快捷键处理
   useEffect(() => {
@@ -375,9 +369,10 @@ function StoryScreen({ scene }) {
 }
 
 // 战斗界面 - 简化版
-function BattleScreen({ scene, playerHp, enemyHp, player }) {
+function BattleScreen({ scene, playerHp, enemyHp, player, onAttack, attackAnim }) {
   const maxPlayerHp = player.maxHp
   const maxEnemyHp = scene.enemy.maxHp
+  const isAnimating = Boolean(attackAnim)
 
   return (
     <div className="battle-screen">
@@ -405,6 +400,22 @@ function BattleScreen({ scene, playerHp, enemyHp, player }) {
           </div>
           <span className="hp-text small">{enemyHp}/{maxEnemyHp}</span>
         </div>
+      </div>
+
+      <div className="choices mt-2">
+        {scene.playerAttacks?.map((attack, index) => (
+          <button
+            key={`${scene.id}-${attack.name}`}
+            className="btn choice-btn"
+            onClick={() => onAttack(index)}
+            disabled={isAnimating}
+            title={attack.description}
+          >
+            <span className="choice-icon">⚡</span>
+            <span className="choice-text">{attack.name}</span>
+            <span className="choice-meta">-{attack.damage}HP</span>
+          </button>
+        ))}
       </div>
     </div>
   )
