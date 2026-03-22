@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { GamePhase, createNewGame, addStress, takeDamage, healPlayer, unlockSkill, Skills, saveGame, loadGame, hasSaveGame, soundManager } from './utils/gameState'
+import React, { useState, useEffect, useCallback } from 'react'
+import { GamePhase, createNewGame, addStress, takeDamage, healPlayer, unlockSkill, saveGame, loadGame, hasSaveGame, soundManager } from './utils/gameState'
 import { Chapter1Data, Chapter2Data, Chapter3Data, AllChapters, findSceneById } from './data/chapters'
 import './App.css'
 
@@ -9,17 +9,12 @@ function App() {
     player: createNewGame(),
     currentScene: null,
     chapterId: null,
-    battleResult: null
+    battleResult: null,
+    attackAnim: null
   }))
   
-  // 打字机效果状态
-  const [isTyping, setIsTyping] = useState(false)
-    phase: GamePhase.START,
-    player: createNewGame(),
-    currentScene: null,
-    chapterId: null,
-    battleResult: null
-  }))
+  // 当前版本未启用打字机，保留布尔值用于按钮显隐逻辑
+  const isTyping = false
 
   // 全局快捷键处理
   useEffect(() => {
@@ -86,7 +81,8 @@ function App() {
       player: createNewGame(),
       currentScene: Chapter1Data.scenes[0],
       chapterId: 'chapter1',
-      battleResult: null
+      battleResult: null,
+      attackAnim: null
     })
   }
 
@@ -94,7 +90,10 @@ function App() {
   const continueGame = () => {
     const saved = loadGame()
     if (saved) {
-      setGameState(saved)
+      setGameState({
+        ...saved,
+        attackAnim: saved.attackAnim ?? null
+      })
       soundManager.play('victory')
     } else {
       startNewGame()
@@ -167,11 +166,14 @@ function App() {
     playerHp: gameState.player.hp,
     enemyHp: gameState.currentScene.enemy?.hp || 0,
     playerAttack: (attackIndex) => {
-      const attack = gameState.currentScene.playerAttacks[attackIndex]
-      const enemy = gameState.currentScene.enemy
-      const newEnemyHp = Math.max(0, enemy.hp - attack.damage)
+      const currentScene = gameState.currentScene
+      const attack = currentScene?.playerAttacks?.[attackIndex]
+      const enemy = currentScene?.enemy
+      if (!attack || !enemy) return
+
       const enemyAttack = enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)]
-      const newPlayerHp = Math.max(0, gameState.player.hp - enemyAttack.damage)
+      const nextEnemyHp = Math.max(0, enemy.hp - attack.damage)
+      const nextPlayerHp = Math.max(0, gameState.player.hp - enemyAttack.damage)
 
       soundManager.play('battle')
 
@@ -181,22 +183,25 @@ function App() {
       }))
 
       setTimeout(() => {
-        if (newEnemyHp <= 0) {
+        if (nextEnemyHp <= 0) {
           soundManager.play('victory')
-          saveGame(gameState)
-          const nextSceneId = gameState.currentScene.winNext
+          const nextSceneId = currentScene.winNext
           const nextScene = findScene(nextSceneId)
           if (nextScene) {
-            setGameState(prev => ({
-              ...prev,
-              phase: GamePhase.STORY,
-              currentScene: nextScene,
-              chapterId: nextSceneId.startsWith('chapter2') ? 'chapter2' :
-                         nextSceneId.startsWith('chapter3') ? 'chapter3' : prev.chapterId,
-              attackAnim: null
-            }))
+            setGameState(prevState => {
+              const updatedState = {
+                ...prevState,
+                phase: GamePhase.STORY,
+                currentScene: nextScene,
+                chapterId: nextSceneId.startsWith('chapter2') ? 'chapter2' :
+                           nextSceneId.startsWith('chapter3') ? 'chapter3' : prevState.chapterId,
+                attackAnim: null
+              }
+              saveGame(updatedState)
+              return updatedState
+            })
           }
-        } else if (newPlayerHp <= 0) {
+        } else if (nextPlayerHp <= 0) {
           soundManager.play('damage')
           setGameState(prev => ({
             ...prev,
@@ -211,10 +216,10 @@ function App() {
           soundManager.play('damage')
           setGameState(prev => ({
             ...prev,
-            player: { ...prev.player, hp: newPlayerHp },
+            player: { ...prev.player, hp: nextPlayerHp },
             currentScene: {
               ...prev.currentScene,
-              enemy: { ...prev.currentScene.enemy, hp: newEnemyHp }
+              enemy: { ...prev.currentScene.enemy, hp: nextEnemyHp }
             },
             attackAnim: null
           }))
@@ -375,9 +380,10 @@ function StoryScreen({ scene }) {
 }
 
 // 战斗界面 - 简化版
-function BattleScreen({ scene, playerHp, enemyHp, player }) {
+function BattleScreen({ scene, playerHp, enemyHp, player, onAttack, attackAnim }) {
   const maxPlayerHp = player.maxHp
   const maxEnemyHp = scene.enemy.maxHp
+  const isAnimating = Boolean(attackAnim)
 
   return (
     <div className="battle-screen">
@@ -405,6 +411,22 @@ function BattleScreen({ scene, playerHp, enemyHp, player }) {
           </div>
           <span className="hp-text small">{enemyHp}/{maxEnemyHp}</span>
         </div>
+      </div>
+
+      <div className="choices mt-2">
+        {scene.playerAttacks?.map((attack, index) => (
+          <button
+            key={`${scene.id}-${attack.name}`}
+            className="btn choice-btn"
+            onClick={() => onAttack(index)}
+            disabled={isAnimating}
+            title={attack.description}
+          >
+            <span className="choice-icon">⚡</span>
+            <span className="choice-text">{attack.name}</span>
+            <span className="choice-meta">-{attack.damage}HP</span>
+          </button>
+        ))}
       </div>
     </div>
   )
