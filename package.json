@@ -21,8 +21,11 @@
   ],
   "type": "module",
   "scripts": {
+    "predev": "node scripts/check-deps.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/check-deps.mjs",
     "build": "vite build",
+    "prepreview": "node scripts/check-deps.mjs",
     "preview": "vite preview",
     "deploy": "vite build && gh-pages -d dist",
     "lint": "eslint src",

@@ -2646,6 +2646,24 @@ AI可以放大能力，但无法替代你的价值观与选择。`,
           effect: { stress: -20, reputation: 10 }
         }
       ]
+    },
+    {
+      id: 'coming-soon',
+      title: '当前版本通关',
+      type: 'result',
+      content: `你完成了当前版本的主线内容。\n\n后续终章正在开发中，感谢你的游玩与反馈。\n\n你可以返回主菜单重新开始，尝试不同分支与结局。`,
+      choices: [
+        {
+          text: '返回主菜单',
+          nextScene: 'back-to-menu',
+          effect: { stress: -10 }
+        },
+        {
+          text: '重开第一章',
+          nextScene: '1-1',
+          effect: { stress: -10 }
+        }
+      ]
     }
   ]
 }

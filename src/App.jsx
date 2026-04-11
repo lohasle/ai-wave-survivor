@@ -1,20 +1,191 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { GamePhase, createNewGame, addStress, takeDamage, healPlayer, unlockSkill, saveGame, loadGame, hasSaveGame, soundManager } from './utils/gameState'
-import { Chapter1Data, Chapter2Data, Chapter3Data, AllChapters, findSceneById } from './data/chapters'
+import {
+  GamePhase,
+  createNewGame,
+  addStress,
+  takeDamage,
+  healPlayer,
+  unlockSkill,
+  saveGame,
+  loadGame,
+  hasSaveGame,
+  soundManager
+} from './utils/gameState'
+import { Chapter1Data } from './data/chapters'
+import {
+  resolveScene,
+  SCENE_IDS,
+  isValidStoryScene,
+  isValidBattleScene
+} from './utils/sceneResolver'
 import './App.css'
 
-function App() {
-  const [gameState, setGameState] = useState(() => ({
+const START_SCENE_ID = Chapter1Data.scenes[0]?.id || '1-1'
+
+const DEFAULT_GAME_OVER_SCENE = {
+  id: 'game-over-default',
+  type: 'result',
+  title: '战斗失败',
+  content: '你被AI击败了。在这个世界里，失败就意味着...\n\n但别灰心，你可以重新开始！',
+  choices: [
+    { text: '返回主菜单', nextScene: SCENE_IDS.BACK_TO_MENU },
+    { text: '重新开始', nextScene: START_SCENE_ID }
+  ]
+}
+
+const LAID_OFF_SCENE = {
+  id: 'laid-off',
+  type: 'result',
+  title: '被裁员',
+  content: '你的压力值达到了100%。AI人力资源系统判定：你已经不适合这家公司。\n\n你收到了N+1赔偿通知：共计人民币0元（系统判定你的可替代性为100%）',
+  choices: [
+    { text: '返回主菜单', nextScene: SCENE_IDS.BACK_TO_MENU },
+    { text: '再试一次', nextScene: START_SCENE_ID }
+  ]
+}
+
+function getStartState() {
+  return {
     phase: GamePhase.START,
     player: createNewGame(),
     currentScene: null,
     chapterId: null,
     battleResult: null,
     attackAnim: null
-  }))
-  
+  }
+}
+
+function normalizePlayer(player) {
+  const fallback = createNewGame()
+  const base = player && typeof player === 'object' ? player : {}
+
+  return {
+    ...fallback,
+    ...base,
+    hp: typeof base.hp === 'number' ? base.hp : fallback.hp,
+    maxHp: typeof base.maxHp === 'number' ? base.maxHp : fallback.maxHp,
+    stress: typeof base.stress === 'number' ? base.stress : fallback.stress,
+    reputation: typeof base.reputation === 'number' ? base.reputation : fallback.reputation,
+    skills: Array.isArray(base.skills) ? base.skills : [],
+    inventory: Array.isArray(base.inventory) ? base.inventory : []
+  }
+}
+
+function buildStateFromResolved(prevState, resolved, nextPlayer = null, forcePhase = null) {
+  const player = nextPlayer ?? prevState.player
+
+  if (resolved.scene.type === 'menu') {
+    return {
+      ...getStartState(),
+      player
+    }
+  }
+
+  const nextPhase = forcePhase ?? (resolved.scene.type === 'battle' ? GamePhase.BATTLE : GamePhase.STORY)
+
+  return {
+    ...prevState,
+    phase: nextPhase,
+    player,
+    currentScene: resolved.scene,
+    chapterId: resolved.chapterId ?? prevState.chapterId,
+    battleResult: null,
+    attackAnim: null
+  }
+}
+
+function buildRecoveredSaveState(saved) {
+  if (!saved || typeof saved !== 'object') return null
+
+  const player = normalizePlayer(saved.player)
+  const preferredChapterId = typeof saved.chapterId === 'string'
+    ? saved.chapterId
+    : (typeof saved.chapter === 'string' ? saved.chapter : null)
+
+  if (saved.phase === GamePhase.START) return null
+
+  if (saved.phase === GamePhase.GAME_OVER) {
+    const scene = isValidStoryScene(saved.currentScene) ? saved.currentScene : DEFAULT_GAME_OVER_SCENE
+    return {
+      phase: GamePhase.GAME_OVER,
+      player,
+      currentScene: scene,
+      chapterId: preferredChapterId,
+      battleResult: null,
+      attackAnim: null
+    }
+  }
+
+  const sceneId = saved.currentScene?.id || saved.scene || START_SCENE_ID
+  const resolved = resolveScene(sceneId, preferredChapterId)
+  const phase = (saved.phase === GamePhase.BATTLE && isValidBattleScene(resolved.scene))
+    ? GamePhase.BATTLE
+    : GamePhase.STORY
+
+  return {
+    phase,
+    player,
+    currentScene: resolved.scene,
+    chapterId: resolved.chapterId,
+    battleResult: null,
+    attackAnim: null
+  }
+}
+
+class GameErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error, info) {
+    console.error('[Game] Render error caught by boundary:', error, info)
+  }
+
+  handleRecover = () => {
+    this.setState({ hasError: false, error: null })
+    this.props.onRecover?.()
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="app">
+          <main className="main-content">
+            <div className="story-screen">
+              <h2 className="scene-title">渲染异常</h2>
+              <div className="story-content">
+                <p>游戏界面出现了异常。你可以返回主菜单继续游戏。</p>
+              </div>
+              <div className="choices mt-2">
+                <button className="btn choice-btn" onClick={this.handleRecover}>
+                  <span className="choice-icon">↩</span>
+                  <span className="choice-text">返回主菜单</span>
+                </button>
+              </div>
+            </div>
+          </main>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+function App() {
+  const [gameState, setGameState] = useState(getStartState)
+
   // 当前版本未启用打字机，保留布尔值用于按钮显隐逻辑
   const isTyping = false
+
+  const resetToMenu = useCallback(() => {
+    setGameState(getStartState())
+  }, [])
 
   // 全局快捷键处理
   useEffect(() => {
@@ -52,167 +223,127 @@ function App() {
     return () => clearInterval(autoSaveTimer)
   }, [gameState])
 
-  // 查找场景
-  const findScene = useCallback((sceneId, chapterId = gameState.chapterId) => {
-    if (sceneId === 'back-to-menu') {
-      return { id: 'menu', type: 'menu', title: '主菜单' }
-    }
-    if (sceneId === 'coming-soon') {
-      return Chapter3Data.scenes.find(s => s.id === 'coming-soon')
-    }
-
-    if (chapterId) {
-      const scene = findSceneById(chapterId, sceneId)
-      if (scene) return scene
-    }
-
-    for (const chapter of Object.values(AllChapters)) {
-      const scene = chapter.scenes.find(s => s.id === sceneId)
-      if (scene) return scene
-    }
-
-    return null
-  }, [gameState.chapterId])
-
   // 开始新游戏
-  const startNewGame = () => {
+  const startNewGame = useCallback(() => {
+    const player = createNewGame()
+    const resolved = resolveScene(START_SCENE_ID, 'chapter1')
+
     setGameState({
       phase: GamePhase.STORY,
-      player: createNewGame(),
-      currentScene: Chapter1Data.scenes[0],
-      chapterId: 'chapter1',
+      player,
+      currentScene: resolved.scene,
+      chapterId: resolved.chapterId || 'chapter1',
       battleResult: null,
       attackAnim: null
     })
-  }
+  }, [])
 
   // 继续游戏
-  const continueGame = () => {
+  const continueGame = useCallback(() => {
     const saved = loadGame()
-    if (saved) {
-      setGameState({
-        ...saved,
-        attackAnim: saved.attackAnim ?? null
-      })
+    const recovered = buildRecoveredSaveState(saved)
+
+    if (recovered) {
+      setGameState(recovered)
       soundManager.play('victory')
-    } else {
-      startNewGame()
+      return
     }
-  }
+
+    startNewGame()
+  }, [startNewGame])
 
   // 选择选项
-  const makeChoice = (choice) => {
+  const makeChoice = useCallback((choice) => {
     const { nextScene, effect } = choice
 
     soundManager.play('click')
 
-    if (effect) {
-      let newPlayer = { ...gameState.player }
+    setGameState(prev => {
+      let nextPlayer = { ...prev.player }
 
-      if (effect.stress) newPlayer = addStress(newPlayer, effect.stress)
-      if (effect.hpDamage) newPlayer = takeDamage(newPlayer, effect.hpDamage)
-      if (effect.heal) newPlayer = healPlayer(newPlayer, effect.heal)
-      if (effect.unlocksSkill) {
-        newPlayer = unlockSkill(newPlayer, effect.unlocksSkill)
-        soundManager.play('skill')
+      if (effect) {
+        if (effect.stress) nextPlayer = addStress(nextPlayer, effect.stress)
+        if (effect.hpDamage) nextPlayer = takeDamage(nextPlayer, effect.hpDamage)
+        if (effect.heal) nextPlayer = healPlayer(nextPlayer, effect.heal)
+        if (effect.unlocksSkill) {
+          nextPlayer = unlockSkill(nextPlayer, effect.unlocksSkill)
+          soundManager.play('skill')
+        }
+        if (effect.reputation) nextPlayer = { ...nextPlayer, reputation: nextPlayer.reputation + effect.reputation }
       }
-      if (effect.reputation) newPlayer = { ...newPlayer, reputation: newPlayer.reputation + effect.reputation }
 
-      if (newPlayer.isLaidOff) {
+      if (nextPlayer.isLaidOff) {
         soundManager.play('gameover')
-        setGameState(prev => ({
+        return {
           ...prev,
           phase: GamePhase.GAME_OVER,
-          currentScene: {
-            title: '被裁员',
-            content: '你的压力值达到了100%。AI人力资源系统判定：你已经不适合这家公司。\n\n你收到了N+1赔偿通知：共计人民币0元（系统判定你的可替代性为100%）'
-          }
-        }))
-        return
+          player: nextPlayer,
+          currentScene: LAID_OFF_SCENE,
+          attackAnim: null
+        }
       }
 
-      setGameState(prev => ({
-        ...prev,
-        player: newPlayer
-      }))
-    }
-
-    const nextSceneData = findScene(nextScene)
-    if (nextSceneData) {
-      if (nextSceneData.type === 'battle') {
-        setGameState(prev => ({
-          ...prev,
-          phase: GamePhase.BATTLE,
-          currentScene: nextSceneData,
-          battleResult: null
-        }))
-      } else {
-        let newChapterId = gameState.chapterId
-        if (nextScene === 'chapter2-intro') newChapterId = 'chapter2'
-        if (nextScene === 'chapter3-intro') newChapterId = 'chapter3'
-
-        setGameState(prev => ({
-          ...prev,
-          phase: GamePhase.STORY,
-          currentScene: nextSceneData,
-          chapterId: newChapterId
-        }))
-      }
-    }
-  }
+      const resolved = resolveScene(nextScene, prev.chapterId)
+      return buildStateFromResolved(prev, resolved, nextPlayer)
+    })
+  }, [])
 
   // 战斗逻辑
-  const battleState = gameState.phase === GamePhase.BATTLE ? {
-    playerHp: gameState.player.hp,
-    enemyHp: gameState.currentScene.enemy?.hp || 0,
-    playerAttack: (attackIndex) => {
-      const currentScene = gameState.currentScene
-      const attack = currentScene?.playerAttacks?.[attackIndex]
-      const enemy = currentScene?.enemy
-      if (!attack || !enemy) return
+  const battleState = gameState.phase === GamePhase.BATTLE && isValidBattleScene(gameState.currentScene)
+    ? {
+      playerHp: gameState.player.hp,
+      enemyHp: gameState.currentScene.enemy.hp,
+      playerAttack: (attackIndex) => {
+        const currentScene = gameState.currentScene
+        const attack = currentScene?.playerAttacks?.[attackIndex]
+        const enemy = currentScene?.enemy
+        if (!attack || !enemy) return
 
-      const enemyAttack = enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)]
-      const nextEnemyHp = Math.max(0, enemy.hp - attack.damage)
-      const nextPlayerHp = Math.max(0, gameState.player.hp - enemyAttack.damage)
+        const enemyAttack = enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)]
+        const nextEnemyHp = Math.max(0, enemy.hp - attack.damage)
+        const nextPlayerHp = Math.max(0, gameState.player.hp - enemyAttack.damage)
 
-      soundManager.play('battle')
+        soundManager.play('battle')
 
-      setGameState(prev => ({
-        ...prev,
-        attackAnim: { player: attack.name, enemy: enemyAttack.name }
-      }))
+        setGameState(prev => ({
+          ...prev,
+          attackAnim: { player: attack.name, enemy: enemyAttack.name }
+        }))
 
-      setTimeout(() => {
-        if (nextEnemyHp <= 0) {
-          soundManager.play('victory')
-          const nextSceneId = currentScene.winNext
-          const nextScene = findScene(nextSceneId)
-          if (nextScene) {
+        setTimeout(() => {
+          if (nextEnemyHp <= 0) {
+            soundManager.play('victory')
+            const nextSceneId = currentScene.winNext || SCENE_IDS.BACK_TO_MENU
             setGameState(prevState => {
-              const updatedState = {
-                ...prevState,
-                phase: GamePhase.STORY,
-                currentScene: nextScene,
-                chapterId: nextSceneId.startsWith('chapter2') ? 'chapter2' :
-                           nextSceneId.startsWith('chapter3') ? 'chapter3' : prevState.chapterId,
-                attackAnim: null
-              }
+              const resolved = resolveScene(nextSceneId, prevState.chapterId)
+              const updatedState = buildStateFromResolved(prevState, resolved)
               saveGame(updatedState)
               return updatedState
             })
+            return
           }
-        } else if (nextPlayerHp <= 0) {
-          soundManager.play('damage')
-          setGameState(prev => ({
-            ...prev,
-            phase: GamePhase.GAME_OVER,
-            currentScene: {
-              title: '战斗失败',
-              content: '你被AI击败了。在这个世界里，失败就意味着...\n\n但别灰心，你可以重新开始！'
-            },
-            attackAnim: null
-          }))
-        } else {
+
+          if (nextPlayerHp <= 0) {
+            const loseNext = currentScene.loseNext
+            soundManager.play('damage')
+
+            if (loseNext && loseNext !== 'game-over') {
+              setGameState(prevState => {
+                const resolved = resolveScene(loseNext, prevState.chapterId)
+                return buildStateFromResolved(prevState, resolved)
+              })
+              return
+            }
+
+            setGameState(prev => ({
+              ...prev,
+              phase: GamePhase.GAME_OVER,
+              currentScene: DEFAULT_GAME_OVER_SCENE,
+              attackAnim: null
+            }))
+            return
+          }
+
           soundManager.play('damage')
           setGameState(prev => ({
             ...prev,
@@ -223,10 +354,10 @@ function App() {
             },
             attackAnim: null
           }))
-        }
-      }, 300)
+        }, 300)
+      }
     }
-  } : null
+    : null
 
   // 渲染不同阶段
   const renderContent = () => {
@@ -237,14 +368,13 @@ function App() {
       case GamePhase.STORY:
       case GamePhase.RESULT:
       case GamePhase.GAME_OVER:
-        return <StoryScreen
-          scene={gameState.currentScene}
-          player={gameState.player}
-          onChoice={makeChoice}
-          isGameOver={gameState.phase === GamePhase.GAME_OVER}
-        />
+        return <StoryScreen scene={gameState.currentScene} onBackToMenu={resetToMenu} />
 
       case GamePhase.BATTLE:
+        if (!battleState) {
+          return <StoryScreen scene={DEFAULT_GAME_OVER_SCENE} onBackToMenu={resetToMenu} />
+        }
+
         return <BattleScreen
           scene={gameState.currentScene}
           playerHp={battleState.playerHp}
@@ -252,23 +382,32 @@ function App() {
           onAttack={battleState.playerAttack}
           player={gameState.player}
           attackAnim={gameState.attackAnim}
+          onBackToMenu={resetToMenu}
         />
 
       default:
-        return <div>未知状态</div>
+        return <StoryScreen scene={DEFAULT_GAME_OVER_SCENE} onBackToMenu={resetToMenu} />
     }
   }
 
+  const shouldShowActionArea =
+    (gameState.phase === GamePhase.STORY || gameState.phase === GamePhase.GAME_OVER || gameState.phase === GamePhase.RESULT) &&
+    !isTyping &&
+    Array.isArray(gameState.currentScene?.choices) &&
+    gameState.currentScene.choices.length > 0
+
   return (
-    <div className="app">
-      <Header player={gameState.player} phase={gameState.phase} />
-      <main className="main-content">
-        {renderContent()}
-      </main>
-      {gameState.phase === GamePhase.STORY && !isTyping && gameState.currentScene?.choices && (
-        <ActionArea choices={gameState.currentScene.choices} onChoice={makeChoice} />
-      )}
-    </div>
+    <GameErrorBoundary onRecover={resetToMenu}>
+      <div className="app">
+        <Header player={gameState.player} phase={gameState.phase} />
+        <main className="main-content">
+          {renderContent()}
+        </main>
+        {shouldShowActionArea && (
+          <ActionArea choices={gameState.currentScene.choices} onChoice={makeChoice} />
+        )}
+      </div>
+    </GameErrorBoundary>
   )
 }
 
@@ -292,7 +431,7 @@ function StartScreen({ onNewGame, onContinue }) {
           const date = new Date(data.savedAt)
           setSaveInfo(date.toLocaleString('zh-CN'))
         }
-      } catch (e) {
+      } catch {
         console.warn('[Game] Failed to parse save info')
       }
     }
@@ -324,7 +463,7 @@ function StartScreen({ onNewGame, onContinue }) {
       <h1 className="game-title">AI浪潮生存者</h1>
       <p className="game-subtitle">在AI横行的世界里，找到你不可替代的价值</p>
 
-      <div className="version-badge">v0.2.0 - 第二章开放</div>
+      <div className="version-badge">v0.4.0 - 六章开放</div>
 
       <div className="card text-center">
         <h3 className="text-accent">游戏特色</h3>
@@ -356,7 +495,7 @@ function StartScreen({ onNewGame, onContinue }) {
       </button>
 
       <div className="stats-preview">
-        <small className="text-secondary">已有 2 个章节可玩 • v0.2.0</small>
+        <small className="text-secondary">已有 6 个章节可玩 • v0.4.0</small>
       </div>
 
       <div className="shortcuts-hint mt-2">
@@ -366,9 +505,25 @@ function StartScreen({ onNewGame, onContinue }) {
   )
 }
 
-// 故事界面 - 增强版
-function StoryScreen({ scene }) {
-  // 简化：只显示内容，打字效果由 action-area 控制
+// 故事界面
+function StoryScreen({ scene, onBackToMenu }) {
+  if (!isValidStoryScene(scene)) {
+    return (
+      <div className="story-screen">
+        <h2 className="scene-title">场景异常</h2>
+        <div className="story-content">
+          <p>当前剧情未能正确加载，你可以返回主菜单继续游戏。</p>
+        </div>
+        <div className="choices mt-2">
+          <button className="btn choice-btn" onClick={onBackToMenu}>
+            <span className="choice-icon">↩</span>
+            <span className="choice-text">返回主菜单</span>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="story-screen">
       <h2 className="scene-title">{scene.title}</h2>
@@ -379,10 +534,27 @@ function StoryScreen({ scene }) {
   )
 }
 
-// 战斗界面 - 简化版
-function BattleScreen({ scene, playerHp, enemyHp, player, onAttack, attackAnim }) {
-  const maxPlayerHp = player.maxHp
-  const maxEnemyHp = scene.enemy.maxHp
+// 战斗界面
+function BattleScreen({ scene, playerHp, enemyHp, player, onAttack, attackAnim, onBackToMenu }) {
+  if (!isValidBattleScene(scene) || !player) {
+    return (
+      <div className="story-screen">
+        <h2 className="scene-title">战斗场景异常</h2>
+        <div className="story-content">
+          <p>战斗数据加载失败，建议返回主菜单重新进入。</p>
+        </div>
+        <div className="choices mt-2">
+          <button className="btn choice-btn" onClick={onBackToMenu}>
+            <span className="choice-icon">↩</span>
+            <span className="choice-text">返回主菜单</span>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const maxPlayerHp = Math.max(1, player.maxHp)
+  const maxEnemyHp = Math.max(1, scene.enemy.maxHp)
   const isAnimating = Boolean(attackAnim)
 
   return (
@@ -414,7 +586,7 @@ function BattleScreen({ scene, playerHp, enemyHp, player, onAttack, attackAnim }
       </div>
 
       <div className="choices mt-2">
-        {scene.playerAttacks?.map((attack, index) => (
+        {scene.playerAttacks.map((attack, index) => (
           <button
             key={`${scene.id}-${attack.name}`}
             className="btn choice-btn"
@@ -475,7 +647,7 @@ function Header({ player, phase }) {
         </div>
       )}
 
-      {phase === GamePhase.STORY && (
+      {phase !== GamePhase.START && (
         <button
           className="header-btn"
           onClick={() => window.location.reload()}
@@ -492,7 +664,6 @@ function Header({ player, phase }) {
 function ActionArea({ choices, onChoice }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
 
-  // 如果没有 choices，不显示
   if (!choices || choices.length === 0) return null
 
   return (
@@ -500,7 +671,7 @@ function ActionArea({ choices, onChoice }) {
       <div className="choices">
         {choices.map((choice, index) => (
           <button
-            key={index}
+            key={`${choice.text}-${index}`}
             className={`btn choice-btn ${index === selectedIndex ? 'choice-selected' : ''}`}
             onClick={() => onChoice(choice)}
             onMouseEnter={() => setSelectedIndex(index)}
