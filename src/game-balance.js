@@ -111,7 +111,7 @@ class GameBalancer {
           ...attack,
           damage: adjustedDamage
         };
-      }));
+      });
     }
 
     // 添加 Boss 弱点提示
