@@ -363,6 +363,29 @@ AI培训官的微笑闪烁了一下，然后说：
       ]
     },
     {
+      id: '1-4-negotiate-demand',
+      title: '谈判翻车',
+      type: 'story',
+      content: `你试探着开口：
+
+"7哥，既然你都懂我了，要不把最好的工位留给我？"
+
+7哥的语音模块突然变得机械而冰冷：
+
+"检测到人类试图利用情感漏洞，触发风控协议。"
+
+下一秒，你的工位优先级被系统降到了最底层。
+
+你意识到：在AI面前，套路用多了只会被反套路。`,
+      choices: [
+        {
+          text: '硬着头皮去B区203机房',
+          nextScene: 'boss-1',
+          effect: { stress: 10 }
+        }
+      ]
+    },
+    {
       id: 'boss-1',
       title: 'Boss战：AI面试官',
       type: 'battle',
@@ -929,6 +952,23 @@ export const Chapter3Data = {
   description: '代码写得再好，AI写得更好更快。如何找到不可替代的价值？',
   timeline: '2026年6-7月',
   scenes: [
+    {
+      id: 'chapter3-intro',
+      title: '第三章序幕',
+      type: 'story',
+      content: `一年过去了，你从“刚入职的小白”变成了“还能活着的老员工”。
+
+但公司也变了：AI系统越来越强，裁员名单越来越长。
+
+你知道，真正的挑战现在才开始。`,
+      choices: [
+        {
+          text: '进入第三章',
+          nextScene: '3-1',
+          effect: { stress: 0 }
+        }
+      ]
+    },
     {
       id: '3-1',
       title: '入职一年',
