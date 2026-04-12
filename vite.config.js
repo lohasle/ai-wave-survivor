@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1]
-const githubPagesBase = repositoryName ? `/${repositoryName}/` : '/'
+const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1] || 'ai-wave-survivor'
+const githubPagesBase = `/${repositoryName}/`
 
 export default defineConfig({
   plugins: [react()],
-  // GitHub Pages 部署使用仓库名作为 base，其他环境使用根路径
-  base: process.env.GITHUB_ACTIONS === 'true' ? githubPagesBase : '/',
+  // GitHub Pages 部署使用仓库名作为 base
+  base: githubPagesBase,
   server: {
     port: 3000,
     host: true
